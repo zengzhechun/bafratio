@@ -1,0 +1,35 @@
+Package: biasratio
+Title: Bias-Effect Ratio for Quantifying Residual Systematic Bias in Observational Studies
+Version: 0.1.0
+Authors@R: c(
+    person("Zhechun", "Zeng", , "zengzhechun@users.noreply.github.com", role = c("aut", "cre"))
+  )
+Description: Quantifies residual systematic bias in observational effect
+    estimates using negative control outcomes. Building on the OHDSI empirical
+    calibration framework ('EmpiricalCalibration'), the bias-effect ratio
+    (BER) expresses the magnitude of the estimated systematic bias relative to
+    the calibrated effect estimate, turning the binary verdict of a calibrated
+    p-value into a continuous, interpretable diagnostic. Each estimate is
+    classified as bias-dominated, competitive, or effect-dominated. Provides
+    log-scale bootstrap confidence intervals, leave-one-out sensitivity
+    analysis, negative control diagnostics, and 'ggplot2' visualizations
+    designed for clinical audiences.
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+Imports:
+    EmpiricalCalibration (>= 3.0.0),
+    ggplot2 (>= 3.4.0),
+    rlang,
+    stats
+Suggests:
+    testthat (>= 3.0.0),
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr
+Config/testthat/edition: 3
+URL: https://github.com/zengzhechun/biasratio
+BugReports: https://github.com/zengzhechun/biasratio/issues
+Language: en-US
+RoxygenNote: 8.0.0

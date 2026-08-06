@@ -1,0 +1,12 @@
+^\.github$
+^\.git$
+^\.gitignore$
+^README\.Rmd$
+^README\.html$
+^LICENSE\.md$
+^data-raw$
+^smoke_plots$
+^smoke_out\.txt$
+^\.Rproj\.user$
+^.*\.Rproj$
+^\.DS_Store$
