@@ -9,3 +9,4 @@ Meta
 smoke_plots/
 smoke_out.txt
 tests/testthat/Rplots.pdf
+README.html

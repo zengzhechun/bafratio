@@ -3,7 +3,7 @@
 \name{ber_estimate}
 \alias{ber_estimate}
 \alias{bsr_estimate}
-\title{Estimate the bias-effect ratio (BER)}
+\title{Estimate the bias fraction (BF) and the bias-effect ratio (BER)}
 \usage{
 ber_estimate(logRr, seLogRr, ncLogRr, ncSeLogRr, ncNames = NULL)
 
@@ -35,9 +35,12 @@ distribution (the estimated systematic bias).}
 standard error \eqn{\sqrt{se^2 + \sigma_B^2}}.}
 \item{rr_uncal, rr_cal, rr_bias}{Ratio-scale quantities:
 uncalibrated RR, calibrated RR, and bias factor \eqn{e^{\mu_B}}.}
-\item{ber}{The bias-effect ratio \eqn{|\mu_B| / |\log RR_{cal}|}.
-\code{Inf} when the calibrated effect is exactly 0 with non-zero bias;
-\code{NaN} when both are 0 (undefined).}
+\item{bf}{The bias fraction \eqn{|\mu_B| / (|\mu_B| + |\log RR_{cal}|)},
+in the unit interval; 1 when the calibrated effect is exactly 0 with non-zero
+bias, \code{NaN} when both are 0 (undefined).}
+\item{ber}{The auxiliary bias-effect ratio
+\eqn{|\mu_B| / |\log RR_{cal}|}; \code{Inf} when the calibrated effect
+is exactly 0 with non-zero bias, \code{NaN} when both are 0.}
 \item{p_uncal}{Nominal two-sided p-value from the Wald statistic.}
 \item{cal_p}{Two-sided p-value calibrated against the empirical null,
 from \code{\link[EmpiricalCalibration:calibrateP]{EmpiricalCalibration::calibrateP()}}.}
@@ -50,23 +53,34 @@ from \code{\link[EmpiricalCalibration:calibrateP]{EmpiricalCalibration::calibrat
 \description{
 Fits an empirical null distribution to negative control (NC) effect
 estimates, then expresses the estimated systematic bias relative to the
-calibrated effect of interest.
+calibrated effect of interest. The bias fraction (BF) is the primary
+bounded metric; the bias-effect ratio (BER) is retained as the auxiliary
+unbounded display of the same information.
 }
 \details{
 The empirical null \eqn{N(\mu_B, \sigma_B^2)} is estimated by maximum
 likelihood from the NC estimates with \code{\link[EmpiricalCalibration:fitNull]{EmpiricalCalibration::fitNull()}}.
 The calibrated log effect is \eqn{\log RR_{cal} = \log RR - \mu_B}, and
 
-\deqn{BER = \frac{|\mu_B|}{|\log RR_{cal}|}}{BER = |mu_B| / |log RR_cal|}
+\deqn{BF = \frac{|\mu_B|}{|\mu_B| + |\log RR_{cal}|}, \quad BF \in (0,1],
+\qquad BER = \frac{|\mu_B|}{|\log RR_{cal}|} = \frac{BF}{1-BF}}
 
-Interpretation on the ratio scale:
+BF is the share of the total calibrated signal (bias plus residual
+effect) attributable to systematic bias. It is bounded, so BF = 1 when
+the calibrated effect is exactly zero, and no special handling of
+infinite values is needed at the null. The raw-ratio point estimate is
+reported as \code{ber}; use \code{\link[=ber_bootstrap]{ber_bootstrap()}} for the bootstrap-median point
+estimates on both scales.
+
+Interpretation on the bounded scale (identical partition to the BER
+thresholds 1 and 0.5):
 \itemize{
-\item \strong{BER > 1}: systematic bias exceeds the calibrated signal
+\item \strong{BF > 0.5} (BER > 1): systematic bias exceeds the calibrated signal
 (bias-dominated). The observed association can be entirely an artifact.
-\item \strong{0.5 < BER < 1}: bias and signal are of comparable magnitude
-(competitive).
-\item \strong{BER < 0.5}: the calibrated signal clearly exceeds the estimated bias
-(effect-dominated).
+\item \strong{1/3 <= BF <= 0.5} (0.5 <= BER <= 1): bias and signal are of
+comparable magnitude (competitive).
+\item \strong{BF < 1/3} (BER < 0.5): the calibrated signal clearly exceeds the
+estimated bias (effect-dominated).
 }
 
 The calibrated standard error incorporates both random and systematic

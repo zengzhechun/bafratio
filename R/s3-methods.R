@@ -11,6 +11,8 @@ print.ber <- function(x, ...) {
               fmtNum(x$rr_uncal, 3), fmtP(x$p_uncal)))
   cat(sprintf("Calibrated:      RR = %s,  calibrated p %s\n",
               fmtNum(x$rr_cal, 3), fmtP(x$cal_p)))
+  cat(sprintf("BF  = %s  (share of calibrated signal that is bias)\n",
+              fmtNum(x$bf, 3)))
   cat(sprintf("BER = %s  ->  %s\n",
               fmtNum(x$ber, 2), x$classification))
   cat(strrep("-", 48), "\n", sep = "")
@@ -23,6 +25,9 @@ print.ber <- function(x, ...) {
 print.ber_boot <- function(x, ...) {
   cat("Bootstrap CI for the bias-effect ratio\n")
   cat(strrep("=", 48), "\n", sep = "")
+  cat(sprintf("BF  = %s,  %d%% CI [%s, %s]  (bootstrap median)\n",
+              fmtNum(x$bf_median, 3), round(x$level * 100),
+              fmtNum(x$bf_ci_lo, 3), fmtNum(x$bf_ci_hi, 3)))
   cat(sprintf("BER = %s,  %d%% CI [%s, %s]  (method = %s)\n",
               fmtNum(x$ber, 2), round(x$level * 100),
               fmtNum(x$ci_lo, 2), fmtNum(x$ci_hi, 2), x$method))
@@ -55,6 +60,8 @@ print.biasratio <- function(x, ...) {
   cat(sprintf("Empirical null:  mu_B = %s, sigma_B = %s  (K = %d negative controls)\n",
               fmtNum(est$mu_bias, 3), fmtNum(est$sigma_bias, 3),
               length(est$nc_log_rr)))
+  cat(sprintf("BF  = %s  |  BER = %s\n",
+              fmtNum(boot$bf_median, 3), fmtNum(boot$ber_median, 2)))
   cat(sprintf("Uncalibrated:    RR = %s [%.3f, %.3f],  p %s\n",
               fmtNum(est$rr_uncal, 3),
               exp(est$log_rr_uncal - 1.96 * est$se_log_rr),

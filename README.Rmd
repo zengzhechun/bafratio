@@ -29,27 +29,36 @@ In observational studies, a statistically significant association is not
 necessarily a causal one. Empirical calibration with negative control
 outcomes (Schuemie et al., 2014) tells you *whether* residual systematic
 bias plausibly explains your estimate, via a calibrated p-value. But a
-p-value is a binary verdict dressed as a continuous number: it mixes the
-*size* of the bias with the *precision* of the estimate.
+p-value is a binary verdict: it mixes the *size* of the bias with the
+*precision* of the estimate, and it says nothing about the magnitude of
+bias relative to the effect that survives calibration.
 
-The **bias-effect ratio (BER)** separates the two:
+`biasratio` separates the two with a pair of equivalent metrics. The
+primary metric is the **bias fraction (BF)**, the share of the total
+calibrated signal attributable to systematic bias, on a bounded 0-1 scale:
 
 $$
-\mathrm{BER} = \frac{|\mu_B|}{|\log RR_{\text{calibrated}}|}
-= \frac{|\text{systematic bias}|}{|\text{effect remaining after calibration}|}
+\mathrm{BF} = \frac{|\mu_B|}{|\mu_B| + |\log RR_{\text{calibrated}}|}
+= \frac{|\text{systematic bias}|}{|\text{bias}| + |\text{effect remaining after calibration}|}
 $$
 
-* **BER > 1** — bias is larger than the calibrated signal
-  (*bias-dominated*). The "effect" is more likely an artifact than a fact.
-* **0.5 ≤ BER ≤ 1** — bias and signal are comparable (*competitive*).
-  Interpret with caution.
-* **BER < 0.5** — the calibrated signal clearly exceeds the bias
-  (*effect-dominated*). The association survives the bias audit.
+The auxiliary **bias-effect ratio (BER)** expresses the same information as
+an unbounded ratio: $\mathrm{BER} = \mathrm{BF} / (1 - \mathrm{BF})$.
 
-`biasratio` computes the BER with log-scale bootstrap confidence intervals,
-classifies each estimate, runs leave-one-out sensitivity analysis over the
-negative controls, and produces publication-ready `ggplot2` visualizations
-designed for clinical audiences.
+* **BF > 0.5** (BER > 1) — bias accounts for more than half of the
+  calibrated signal (*bias-dominated*). The "effect" is more likely an
+  artifact than a fact.
+* **1/3 ≤ BF ≤ 0.5** (0.5 ≤ BER ≤ 1) — bias and signal are comparable
+  (*competitive*). Interpret with caution.
+* **BF < 1/3** (BER < 0.5) — the calibrated signal clearly exceeds the
+  bias (*effect-dominated*). The association survives the bias audit.
+
+`biasratio` computes BF and BER with logit-scale (equivalently log-scale)
+bootstrap confidence intervals, bootstrap-median point estimates that
+cannot fall outside their own CI, a Fieller confidence set for the
+underlying ratio, three-zone classification, leave-one-out sensitivity
+analysis over the negative controls, and publication-ready `ggplot2`
+visualizations designed for clinical audiences.
 
 ## Installation
 
@@ -59,16 +68,12 @@ designed for clinical audiences.
 remotes::install_github("zengzhechun/biasratio")
 ```
 
-The only hard algorithmic dependency is
-[`EmpiricalCalibration`](https://ohdsi.github.io/EmpiricalCalibration/)
-(OHDSI), which provides the negative-control null fitting engine.
-
-## Quick start: a bias-dominated "effect"
+## Quick start
 
 The package ships a fully synthetic dataset, `sim_nc` / `sim_est`, that
 reproduces a classic *healthy-adherer* scenario: a drug that appears to
-protect against an outcome (RR = 0.83, p < 0.001) purely because of
-systematic error. No real patient data are involved.
+protect against an outcome (RR = 0.83) purely because of systematic error.
+No real patient data are involved.
 
 ```{r quickstart}
 library(biasratio)
@@ -79,111 +84,102 @@ fit <- ber_analyze(
   ncLogRr  = sim_nc$logRr,    # 12 negative control outcomes
   ncSeLogRr = sim_nc$seLogRr,
   ncNames  = sim_nc$outcome,
-  nBoot    = 2000, seed = 42,
-  loo      = TRUE
+  nBoot = 2000, seed = 42,
+  loo = TRUE
 )
+
 fit
 ```
 
-The uncalibrated estimate looks convincingly protective; the BER says the
-protective appearance is about **9 times smaller than the bias itself**.
-
-## Reading the evidence visually
-
-The **gauge** is the headline figure: one number, one interval, three zones.
-
-```{r gauge}
-plot_gauge(fit)
+```{r gauge, fig.height = 2.6}
+plot_bf_gauge(fit)
 ```
 
-The **negative-control fingerprint** shows where the bias estimate comes
-from. The diamond (primary estimate) sits deep inside the bias cloud —
-the visual signature of a bias-dominated association.
+The uncalibrated estimate looks protective (RR = 0.83). Twelve negative
+controls reveal a systematic protective bias ($\mu_B \approx -0.21$).
+After calibration the effect vanishes (calibrated RR = 1.02, calibrated
+p = 0.65), and the bias fraction is BF = 0.88 (95% CI, 0.75-0.99):
+bias accounts for roughly nine tenths of the calibrated signal. Read BF
+near 1 as *signal saturation by bias*, not as a precise fraction.
 
-```{r null, fig.height = 5.5}
+```{r nullplot, fig.height = 4.2}
 plot_null(fit)
 ```
 
-**Before vs after calibration**: the uncalibrated CI excludes 1 (p < 0.001);
-after calibration the interval straddles the null and the calibrated
-p-value is 0.65.
+The diamond (primary estimate) sits inside the cloud of negative controls:
+the visual signature of a bias-dominated association.
 
-```{r calibration, fig.height = 3.6}
+```{r calibration, fig.height = 2.9}
 plot_calibration(fit)
 ```
 
-**Leave-one-out sensitivity**: no single negative control drives the
-verdict — the BER stays in the bias-dominated zone whichever control is
-excluded.
-
-```{r loo, fig.height = 5}
-plot_loo(fit)
+```{r loo, fig.height = 4.2}
+plot_loo(fit$loo)
 ```
 
-The **bootstrap distribution** quantifies uncertainty in the BER itself
-(log scale; dashed line = BER = 1).
+## What the metrics mean, in plain terms
 
-```{r boot, fig.height = 3.6}
-plot_boot(fit)
-```
+| Question | Metric | Scale | Read as |
+|---|---|---|---|
+| Of the signal that survives calibration, how much is bias? | **BF** | 0-1 | bias-dominated > 0.5; competitive 1/3-0.5; effect-dominated < 1/3 |
+| How many times larger is the bias than the residual effect? | **BER** | 0-∞ | BF/(1-BF); same three zones at 1 and 0.5 |
+| Of the *uncalibrated* association, how much is bias? | OBF | 0-∞ | $\|\mu_B\| / \|\log RR_{\text{obs}}\|$; descriptive companion |
 
-## A real-data counter-example: an effect that survives
+Report BF (with its CI and zone) alongside the calibrated p-value and the
+calibrated RR. The calibrated p-value answers *is there evidence of an
+effect after accounting for bias?* BF answers *how much of the surviving
+signal is bias?* Neither is a substitute for the other.
 
-Using the `sccs` dataset shipped with `EmpiricalCalibration` (45 negative
-controls; sertraline and upper GI bleeding, Schuemie et al. 2014):
+## Main functions
 
-```{r sccs}
-data(sccs, package = "EmpiricalCalibration")
-nc <- sccs[sccs$groundTruth == 0, ]
-pc <- sccs[sccs$groundTruth == 1, ]
+| Function | Purpose |
+|---|---|
+| `ber_estimate()` | fit the empirical null; BF and BER point estimates, calibrated RR and p |
+| `ber_bootstrap()` | bootstrap CIs (log/logit scale) + bootstrap-median point estimates |
+| `ber_classify()`, `bf_classify()` | three-zone classification (ratio / fraction scale) |
+| `bf_fieller()` | Fieller confidence set for the ratio $\mu_B / \tilde\psi$ |
+| `ber_loo()` | leave-one-out sensitivity over the negative controls |
+| `ber_diagnostics()` | standardized residuals, Shapiro-Wilk, Q-Q data |
+| `ber_analyze()` | the whole workflow in one call |
+| `plot_bf_gauge()`, `plot_gauge()`, `plot_null()`, `plot_calibration()`, `plot_qq()`, `plot_loo()`, `plot_boot()` | visualizations |
 
-est <- ber_estimate(pc$logRr, pc$seLogRr, nc$logRr, nc$seLogRr,
-                    ncNames = nc$drugName)
-est$ber
-ber_classify(est$ber)
-```
+## Background and assumptions
 
-## Interpretation guardrails
+The approach rests on the OHDSI empirical calibration framework
+(Schuemie et al., 2014, 2018) and on **negative control outcomes**:
+outcomes that share the confounding structure of the primary endpoint but
+cannot plausibly be caused by the exposure (Lipsitch et al., 2010). The key
+assumption is **bias exchangeability**: the residual bias affecting the
+primary estimate is drawn from the same distribution as the biases visible
+in the negative controls. Like the no-unmeasured-confounding assumption it
+diagnoses, bias exchangeability cannot be verified from the data; its
+plausibility must be argued from domain knowledge, and the leave-one-out
+and Fieller analyses probe how far the conclusions depend on it.
 
-* BER is a **diagnostic, not a decision rule**. A bias-dominated BER does
-  not prove the absence of an effect; it proves the data cannot separate
-  the effect from the bias.
-* The quality of the BER depends on the quality of the negative controls:
-  they must share the bias structure of the primary estimate while being
-  known to be unaffected by the exposure.
-* Small numbers of negative controls (K < 10) make the empirical null —
-  and therefore the BER — fragile. Always inspect `plot_loo()`.
+Do not use the metrics when negative controls are few (< 5, ideally ≥ 10),
+non-exchangeable, or point in opposite directions, or when the calibrated
+effect is near zero (BF near 1 signals saturation; the exact value should
+not be over-interpreted).
 
-## Function map
+## Companion paper
 
-| Task | Function |
-| --- | --- |
-| Point estimate of the BER | `ber_estimate()` |
-| Bootstrap confidence interval | `ber_bootstrap()` |
-| Three-zone classification | `ber_classify()` |
-| Leave-one-out sensitivity | `ber_loo()` |
-| Negative-control diagnostics | `ber_diagnostics()` |
-| Full workflow in one call | `ber_analyze()` |
-| Gauge / fingerprint / calibration / Q-Q / LOO / bootstrap plots | `plot_gauge()`, `plot_null()`, `plot_calibration()`, `plot_qq()`, `plot_loo()`, `plot_boot()` |
-
-`bsr_*` aliases are provided for backward compatibility with earlier
-analysis scripts (`bsr_estimate()` ≡ `ber_estimate()`, etc.).
+Zeng Z, Wang J, Zuo H, Shu L. Quantifying Systematic Bias in Observational
+Causal Estimates Using Negative Controls: The Bias Fraction. Manuscript
+v34 (2026). The simulation study (336 conditions, 200 repetitions each) and
+the MIMIC-IV case study described there motivate the defaults used here:
+BF thresholds 0.5 and 1/3, logit-scale bootstrap with bootstrap-median
+point estimates, and the conservative CI-based classification rule.
 
 ## References
 
-* Schuemie MJ, Ryan PB, Dumouchel W, Suchard MA, Madigan D. Interpreting
-  observational studies: why empirical calibration is needed to correct
-  p-values. *Statistics in Medicine* 33(2):209-18, 2014.
-* Schuemie MJ, Hripcsak G, Ryan PB, Madigan D, Suchard MA. Empirical
-  confidence interval calibration for population-level effect estimation
-  studies in observational healthcare data. *PNAS* 115(11):2571-7, 2018.
+Schuemie MJ, Ryan PB, DuMouchel W, Suchard MA, Madigan D. Interpreting
+observational studies: why empirical calibration is needed to correct
+p-values. *Statistics in Medicine* 2014;33(2):209-218.
 
-## Citation
+Schuemie MJ, Hripcsak G, Ryan PB, Madigan D, Suchard MA. Empirical
+confidence interval calibration for population-level effect estimation
+studies in observational healthcare data. *PNAS* 2018;115(11):2571-2577.
 
-```{r, eval = FALSE}
-citation("biasratio")
-```
-
-## License
-
-MIT © Zhechun Zeng
+Lipsitch M, Tchetgen Tchetgen E, Cohen T. Negative controls: a tool for
+detecting confounding and bias in observational studies. *Epidemiology*
+2010;21(3):383-388.

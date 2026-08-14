@@ -7,7 +7,7 @@ test_that("ber_estimate returns a well-formed ber object", {
   expect_s3_class(est, "ber")
   expect_named(est, c("mu_bias", "sigma_bias", "log_rr_uncal", "se_log_rr",
                       "log_rr_cal", "se_log_rr_cal", "rr_uncal", "rr_cal",
-                      "rr_bias", "ber", "p_uncal", "cal_p", "classification",
+                      "rr_bias", "bf", "ber", "p_uncal", "cal_p", "classification",
                       "nc_log_rr", "nc_se_log_rr", "nc_names", "null_fit"))
   expect_equal(est$nc_names, sim_nc$outcome)
 })
@@ -18,6 +18,7 @@ test_that("ber_estimate reproduces the simulated-data anchors", {
   expect_equal(est$mu_bias, -0.2078, tolerance = 0.002)
   expect_equal(est$sigma_bias, 0.0268, tolerance = 0.002)
   expect_equal(est$ber, 8.73, tolerance = 0.05)
+  expect_equal(est$bf, est$ber / (1 + est$ber), tolerance = 1e-10)
   expect_equal(est$cal_p, 0.6494, tolerance = 0.005)
   expect_equal(est$rr_uncal, 0.832, tolerance = 0.002)
   expect_equal(est$rr_cal, 1.024, tolerance = 0.005)

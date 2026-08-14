@@ -26,10 +26,19 @@
 #' @return An object of class `ber_boot`: a list with components
 #'   \describe{
 #'     \item{ci_lo, ci_hi}{Confidence limits for the BER.}
+#'     \item{bf_ci_lo, bf_ci_hi}{Confidence limits for the BF, obtained as
+#'       the monotone transform of the log-scale BER interval (equivalently,
+#'       a percentile interval on the logit scale).}
 #'     \item{level, method}{As supplied.}
-#'     \item{ber}{Point estimate of the BER (from [ber_estimate()]).}
-#'     \item{boot_dist}{Numeric vector of length `nBoot` with the bootstrap
-#'       BER replicates (`NA` for failed iterations).}
+#'     \item{ber}{Raw-ratio point estimate of the BER (from
+#'       [ber_estimate()]).}
+#'     \item{ber_median, bf_median}{Bootstrap-median point estimates
+#'       (median on the log scale, back-transformed). These are the primary
+#'       reported point estimates: they come from the same distribution as
+#'       the CI, so they cannot fall outside it.}
+#'     \item{boot_dist, boot_bf_dist}{Numeric vectors of length `nBoot`
+#'       with the bootstrap BER and BF replicates (`NA` for failed
+#'       iterations).}
 #'     \item{n_fail, n_boot, success_rate}{Convergence diagnostics.}
 #'   }
 #'
@@ -49,6 +58,7 @@ ber_bootstrap <- function(logRr, seLogRr, ncLogRr, ncSeLogRr,
 
   K <- length(ncLogRr)
   bootBer <- rep(NA_real_, nBoot)
+  bootMu <- rep(NA_real_, nBoot)
   logBer <- rep(NA_real_, nBoot)
   nFail <- 0L
 
@@ -66,6 +76,7 @@ ber_bootstrap <- function(logRr, seLogRr, ncLogRr, ncSeLogRr,
       next
     }
     muB <- as.numeric(nullFitB[1])
+    bootMu[b] <- muB
     logTrue <- logRr - muB
     # 防止校准后效应恰为 0 导致 BER 爆炸；1e-8 的数值地板不改变结论
     if (abs(logTrue) < 1e-8) logTrue <- if (logTrue >= 0) 1e-8 else -1e-8
@@ -89,14 +100,29 @@ ber_bootstrap <- function(logRr, seLogRr, ncLogRr, ncSeLogRr,
     stats::quantile(valid, probs, names = FALSE)
   }
 
+  # v0.2.0: bootstrap-median point estimates (median on the log scale,
+  # back-transformed), so the point estimate and the CI come from the same
+  # distribution. The raw ratio can fall outside its own bootstrap CI when
+  # the calibrated effect sits near zero; the median cannot.
+  berMedian <- exp(stats::median(logBer[!is.na(logBer)]))
+  bfMedian <- berMedian / (1 + berMedian)
+  bfCiLo <- ci[1] / (1 + ci[1])
+  bfCiHi <- ci[2] / (1 + ci[2])
+
   structure(
     list(
       ci_lo = unname(ci[1]),
       ci_hi = unname(ci[2]),
+      bf_ci_lo = unname(bfCiLo),
+      bf_ci_hi = unname(bfCiHi),
       level = level,
       method = method,
       ber = ber_estimate(logRr, seLogRr, ncLogRr, ncSeLogRr)$ber,
+      ber_median = unname(berMedian),
+      bf_median = unname(bfMedian),
       boot_dist = bootBer,
+      boot_bf_dist = bootBer / (1 + bootBer),
+      mu_draws = bootMu,
       n_fail = nFail,
       n_boot = nBoot,
       success_rate = 1 - nFail / nBoot

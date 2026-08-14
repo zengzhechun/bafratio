@@ -52,10 +52,19 @@ exponentiated) or \code{"percentile"} (raw percentile interval).}
 An object of class \code{ber_boot}: a list with components
 \describe{
 \item{ci_lo, ci_hi}{Confidence limits for the BER.}
+\item{bf_ci_lo, bf_ci_hi}{Confidence limits for the BF, obtained as
+the monotone transform of the log-scale BER interval (equivalently,
+a percentile interval on the logit scale).}
 \item{level, method}{As supplied.}
-\item{ber}{Point estimate of the BER (from \code{\link[=ber_estimate]{ber_estimate()}}).}
-\item{boot_dist}{Numeric vector of length \code{nBoot} with the bootstrap
-BER replicates (\code{NA} for failed iterations).}
+\item{ber}{Raw-ratio point estimate of the BER (from
+\code{\link[=ber_estimate]{ber_estimate()}}).}
+\item{ber_median, bf_median}{Bootstrap-median point estimates
+(median on the log scale, back-transformed). These are the primary
+reported point estimates: they come from the same distribution as
+the CI, so they cannot fall outside it.}
+\item{boot_dist, boot_bf_dist}{Numeric vectors of length \code{nBoot}
+with the bootstrap BER and BF replicates (\code{NA} for failed
+iterations).}
 \item{n_fail, n_boot, success_rate}{Convergence diagnostics.}
 }
 }

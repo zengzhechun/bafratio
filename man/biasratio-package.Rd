@@ -4,24 +4,28 @@
 \name{biasratio-package}
 \alias{biasratio}
 \alias{biasratio-package}
-\title{biasratio: Bias-Effect Ratio for Observational Studies}
+\title{biasratio: Bias Fraction and Bias-Effect Ratio for Observational Studies}
 \description{
 Quantify residual systematic bias in observational effect estimates using
 negative control outcomes. The package extends the OHDSI empirical
 calibration framework from a binary calibrated p-value to a continuous,
-interpretable diagnostic: the bias-effect ratio (BER).
+interpretable diagnostic: the bias fraction (BF) on a bounded 0-1 scale,
+with the bias-effect ratio (BER) as the auxiliary unbounded display.
 }
 \section{Main functions}{
 
 \itemize{
-\item \code{\link[=ber_estimate]{ber_estimate()}} — BER point estimate
-\item \code{\link[=ber_bootstrap]{ber_bootstrap()}} — bootstrap confidence interval
-\item \code{\link[=ber_classify]{ber_classify()}} — three-zone classification
+\item \code{\link[=ber_estimate]{ber_estimate()}} — BF and BER point estimates
+\item \code{\link[=ber_bootstrap]{ber_bootstrap()}} — bootstrap confidence intervals and bootstrap-median
+point estimates
+\item \code{\link[=ber_classify]{ber_classify()}}, \code{\link[=bf_classify]{bf_classify()}} — three-zone classification
+\item \code{\link[=bf_fieller]{bf_fieller()}} — Fieller confidence set for the underlying ratio
 \item \code{\link[=ber_loo]{ber_loo()}} — leave-one-out sensitivity analysis
 \item \code{\link[=ber_diagnostics]{ber_diagnostics()}} — empirical null fit diagnostics
 \item \code{\link[=ber_analyze]{ber_analyze()}} — full workflow in one call
-\item \code{\link[=plot_gauge]{plot_gauge()}}, \code{\link[=plot_null]{plot_null()}}, \code{\link[=plot_calibration]{plot_calibration()}}, \code{\link[=plot_qq]{plot_qq()}},
-\code{\link[=plot_loo]{plot_loo()}}, \code{\link[=plot_boot]{plot_boot()}} — visualizations
+\item \code{\link[=plot_bf_gauge]{plot_bf_gauge()}}, \code{\link[=plot_gauge]{plot_gauge()}}, \code{\link[=plot_null]{plot_null()}},
+\code{\link[=plot_calibration]{plot_calibration()}}, \code{\link[=plot_qq]{plot_qq()}}, \code{\link[=plot_loo]{plot_loo()}}, \code{\link[=plot_boot]{plot_boot()}} —
+visualizations
 }
 }
 

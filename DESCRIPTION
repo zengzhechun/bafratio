@@ -1,19 +1,21 @@
 Package: biasratio
-Title: Bias-Effect Ratio for Quantifying Residual Systematic Bias in Observational Studies
-Version: 0.1.0
+Title: Bias Fraction and Bias-Effect Ratio: Quantifying Residual Systematic Bias in Observational Studies
+Version: 0.2.0
 Authors@R: c(
     person("Zhechun", "Zeng", , "zengzhechun@users.noreply.github.com", role = c("aut", "cre"))
   )
 Description: Quantifies residual systematic bias in observational effect
     estimates using negative control outcomes. Building on the OHDSI empirical
-    calibration framework ('EmpiricalCalibration'), the bias-effect ratio
-    (BER) expresses the magnitude of the estimated systematic bias relative to
-    the calibrated effect estimate, turning the binary verdict of a calibrated
-    p-value into a continuous, interpretable diagnostic. Each estimate is
-    classified as bias-dominated, competitive, or effect-dominated. Provides
-    log-scale bootstrap confidence intervals, leave-one-out sensitivity
-    analysis, negative control diagnostics, and 'ggplot2' visualizations
-    designed for clinical audiences.
+    calibration framework ('EmpiricalCalibration'), the bias fraction (BF)
+    expresses the share of the total calibrated signal (bias plus residual
+    effect) attributable to systematic bias on a bounded 0-1 scale, and the
+    bias-effect ratio (BER) expresses the same information as an unbounded
+    ratio (BF = BER / (1 + BER)). Each estimate is classified as
+    bias-dominated, competitive, or effect-dominated. Provides log-scale (and
+    logit-scale) bootstrap confidence intervals with bootstrap-median point
+    estimates, a Fieller confidence set for the underlying ratio,
+    leave-one-out sensitivity analysis, negative control diagnostics, and
+    'ggplot2' visualizations designed for clinical audiences.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
