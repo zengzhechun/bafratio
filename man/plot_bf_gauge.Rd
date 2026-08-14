@@ -18,7 +18,7 @@ A \code{ggplot} object.
 \description{
 The signature plot of the v0.2.0 API. Shows the bias fraction (BF) and its
 bootstrap CI on the bounded unit interval, divided into the three
-credibility zones: effect-dominated (< 1/3), competitive (1/3-0.5), and
+credibility zones: effect-dominated (< 1/3), mixed (1/3-0.5), and
 bias-dominated (> 0.5). BF values near 1 should be read as signal
 saturation by bias, not as precise fractions.
 }

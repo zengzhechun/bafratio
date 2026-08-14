@@ -35,11 +35,11 @@ plot_gauge <- function(x, digits = 2) {
   zoneDf <- data.frame(
     xmin = c(lo, 0.5, 1),
     xmax = c(0.5, 1, hi),
-    zone = c("effect-dominated", "competitive", "bias-dominated"),
+    zone = c("effect-dominated", "mixed", "bias-dominated"),
     # 分区标签放在各自 log 区间的几何中心
     xmid = 10^((log10(c(lo, 0.5, 1)) + log10(c(0.5, 1, hi))) / 2)
   )
-  # 为什么分层摆放标签：效应主导案例中 competitive/bias 两个区在 log 轴上
+  # 为什么分层摆放标签：效应主导案例中 mixed/bias 两个区在 log 轴上
   # 很窄，同一高度会相互碰撞；窄区标签上移一层错开
   zoneDf$ylab <- c(0.45, 0.45, 0.45)
   logWidths <- diff(log10(c(lo, 0.5, 1, hi)))
@@ -85,7 +85,7 @@ plot_gauge <- function(x, digits = 2) {
       title = "Bias-effect ratio gauge",
       subtitle = subtitle,
       x = "BER (log scale)", y = NULL,
-      caption = "Zones: BER < 0.5 effect-dominated | 0.5-1 competitive | > 1 bias-dominated"
+      caption = "Zones: BER < 0.5 effect-dominated | 0.5-1 mixed | > 1 bias-dominated"
     ) +
     theme_biasratio() +
     ggplot2::theme(

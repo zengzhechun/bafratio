@@ -1,7 +1,7 @@
 #' Color palette and ggplot2 theme for biasratio
 #'
 #' `ber_pal()` returns the canonical three-zone colors used across all
-#' biasratio plots: red for bias-dominated, amber for competitive, green for
+#' biasratio plots: red for bias-dominated, amber for mixed, green for
 #' effect-dominated. Zone membership is always also encoded by position and
 #' text labels, so the plots remain readable for color-blind readers.
 #'
@@ -14,7 +14,7 @@
 ber_pal <- function() {
   c(
     "bias-dominated" = "#C0392B",
-    "competitive" = "#E67E22",
+    "mixed" = "#E67E22",
     "effect-dominated" = "#1E8449"
   )
 }

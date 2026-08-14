@@ -37,7 +37,7 @@ as an unbounded ratio: $\mathrm{BER} = \mathrm{BF} / (1 - \mathrm{BF})$.
     the calibrated signal (*bias-dominated*). The “effect” is more
     likely an artifact than a fact.
 -   **1/3 ≤ BF ≤ 0.5** (0.5 ≤ BER ≤ 1) — bias and signal are comparable
-    (*competitive*). Interpret with caution.
+    (*mixed*). Interpret with caution.
 -   **BF &lt; 1/3** (BER &lt; 0.5) — the calibrated signal clearly
     exceeds the bias (*effect-dominated*). The association survives the
     bias audit.
@@ -126,11 +126,11 @@ plot_loo(fit$loo)
 
 ## What the metrics mean, in plain terms
 
-| Question                                                    | Metric  | Scale | Read as                                                                 |
-|-------------------------------------------------------------|---------|-------|-------------------------------------------------------------------------|
-| Of the signal that survives calibration, how much is bias?  | **BF**  | 0-1   | bias-dominated &gt; 0.5; competitive 1/3-0.5; effect-dominated &lt; 1/3 |
-| How many times larger is the bias than the residual effect? | **BER** | 0-∞   | BF/(1-BF); same three zones at 1 and 0.5                                |
-| Of the *uncalibrated* association, how much is bias?        | OBF     | 0-∞   | $\|\mu_B\| / \|\log RR_{\text{obs}}\|$; descriptive companion           |
+| Question                                                    | Metric  | Scale | Read as                                                           |
+|-------------------------------------------------------------|---------|-------|-------------------------------------------------------------------|
+| Of the signal that survives calibration, how much is bias?  | **BF**  | 0-1   | bias-dominated &gt; 0.5; mixed 1/3-0.5; effect-dominated &lt; 1/3 |
+| How many times larger is the bias than the residual effect? | **BER** | 0-∞   | BF/(1-BF); same three zones at 1 and 0.5                          |
+| Of the *uncalibrated* association, how much is bias?        | OBF     | 0-∞   | $\|\mu_B\| / \|\log RR_{\text{obs}}\|$; descriptive companion     |
 
 Report BF (with its CI and zone) alongside the calibrated p-value and
 the calibrated RR. The calibrated p-value answers *is there evidence of

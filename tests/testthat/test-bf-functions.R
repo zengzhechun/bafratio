@@ -32,10 +32,10 @@ test_that("ber_bootstrap returns bootstrap-median point estimates inside the CI"
 test_that("bf_classify reproduces the BER classification partition", {
   expect_equal(bf_classify(0.91), "bias-dominated")
   expect_equal(bf_classify(0.91, ciLo = 0.74, ciHi = 0.99), "bias-dominated")
-  expect_equal(bf_classify(0.45, ciLo = 0.31, ciHi = 0.53), "competitive")
+  expect_equal(bf_classify(0.45, ciLo = 0.31, ciHi = 0.53), "mixed")
   expect_equal(bf_classify(0.20, ciLo = 0.10, ciHi = 0.30), "effect-dominated")
-  expect_equal(bf_classify(0.5), "competitive")
-  expect_equal(bf_classify(1 / 3), "competitive")
+  expect_equal(bf_classify(0.5), "mixed")
+  expect_equal(bf_classify(1 / 3), "mixed")
   expect_equal(bf_classify(NA_real_), "unclassifiable")
   # partition equivalence with ber_classify
   expect_equal(bf_classify(0.6), ber_classify(0.6 / 0.4))

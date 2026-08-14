@@ -78,7 +78,7 @@ thresholds 1 and 0.5):
 \item \strong{BF > 0.5} (BER > 1): systematic bias exceeds the calibrated signal
 (bias-dominated). The observed association can be entirely an artifact.
 \item \strong{1/3 <= BF <= 0.5} (0.5 <= BER <= 1): bias and signal are of
-comparable magnitude (competitive).
+comparable magnitude (mixed).
 \item \strong{BF < 1/3} (BER < 0.5): the calibrated signal clearly exceeds the
 estimated bias (effect-dominated).
 }

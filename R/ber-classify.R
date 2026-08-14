@@ -15,7 +15,7 @@
 #' @param effectThreshold BER below which an estimate is effect-dominated
 #'   (default 0.5: calibrated signal is at least twice the bias).
 #'
-#' @return A character scalar: `"bias-dominated"`, `"competitive"`,
+#' @return A character scalar: `"bias-dominated"`, `"mixed"`,
 #'   `"effect-dominated"`, or `"unclassifiable"` (when `ber` is `NA`/`NaN`).
 #'
 #' @export
@@ -32,9 +32,9 @@ ber_classify <- function(ber, ciLo = NA_real_, ciHi = NA_real_,
   if (is.na(ciLo) || is.na(ciHi)) {
     if (ber > biasThreshold) return("bias-dominated")
     if (ber < effectThreshold) return("effect-dominated")
-    return("competitive")
+    return("mixed")
   }
   if (ciLo > biasThreshold) return("bias-dominated")
   if (ciHi < effectThreshold) return("effect-dominated")
-  "competitive"
+  "mixed"
 }

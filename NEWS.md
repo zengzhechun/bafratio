@@ -11,6 +11,9 @@
   the same distribution and cannot diverge.
 * New `bf_classify()`: three-zone classification on the BF scale
   (thresholds 0.5 and 1/3; identical partition to `ber_classify()`).
+* Zone terminology: the middle zone is now named "mixed" (previously
+  "competitive"); `ber_classify()` and `bf_classify()` return "mixed",
+  and `ber_pal()` uses the key "mixed".
 * New `bf_fieller()`: Fieller confidence set for the signed ratio
   mu_B / psi_tilde, with honest handling of near-zero denominators
   (interior / exterior / empty / whole regions).

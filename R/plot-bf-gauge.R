@@ -2,7 +2,7 @@
 #'
 #' The signature plot of the v0.2.0 API. Shows the bias fraction (BF) and its
 #' bootstrap CI on the bounded unit interval, divided into the three
-#' credibility zones: effect-dominated (< 1/3), competitive (1/3-0.5), and
+#' credibility zones: effect-dominated (< 1/3), mixed (1/3-0.5), and
 #' bias-dominated (> 0.5). BF values near 1 should be read as signal
 #' saturation by bias, not as precise fractions.
 #'
@@ -29,7 +29,7 @@ plot_bf_gauge <- function(x, digits = 2) {
   zoneDf <- data.frame(
     xmin = c(0, 1 / 3, 0.5),
     xmax = c(1 / 3, 0.5, 1),
-    zone = c("effect-dominated", "competitive", "bias-dominated"),
+    zone = c("effect-dominated", "mixed", "bias-dominated"),
     xmid = c(1 / 6, (1 / 3 + 0.5) / 2, 0.75)
   )
 
@@ -70,7 +70,7 @@ plot_bf_gauge <- function(x, digits = 2) {
       title = "Bias fraction gauge",
       subtitle = subtitle,
       x = "BF = |mu_B| / (|mu_B| + |calibrated effect|)", y = NULL,
-      caption = "Zones: BF < 1/3 effect-dominated | 1/3-0.5 competitive | > 0.5 bias-dominated"
+      caption = "Zones: BF < 1/3 effect-dominated | 1/3-0.5 mixed | > 0.5 bias-dominated"
     ) +
     theme_biasratio() +
     ggplot2::theme(

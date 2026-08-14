@@ -37,7 +37,7 @@ bsr_classify(
 (default 0.5: calibrated signal is at least twice the bias).}
 }
 \value{
-A character scalar: \code{"bias-dominated"}, \code{"competitive"},
+A character scalar: \code{"bias-dominated"}, \code{"mixed"},
 \code{"effect-dominated"}, or \code{"unclassifiable"} (when \code{ber} is \code{NA}/\code{NaN}).
 }
 \description{

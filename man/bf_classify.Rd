@@ -28,7 +28,7 @@ bf_classify(
 (default 1/3: residual effect is at least twice the bias).}
 }
 \value{
-A character scalar: \code{"bias-dominated"}, \code{"competitive"},
+A character scalar: \code{"bias-dominated"}, \code{"mixed"},
 \code{"effect-dominated"}, or \code{"unclassifiable"} (when \code{bf} is \code{NA}/\code{NaN}).
 }
 \description{

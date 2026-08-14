@@ -17,7 +17,7 @@
 #' @param effectThreshold BF below which an estimate is effect-dominated
 #'   (default 1/3: residual effect is at least twice the bias).
 #'
-#' @return A character scalar: `"bias-dominated"`, `"competitive"`,
+#' @return A character scalar: `"bias-dominated"`, `"mixed"`,
 #'   `"effect-dominated"`, or `"unclassifiable"` (when `bf` is `NA`/`NaN`).
 #'
 #' @export
@@ -34,9 +34,9 @@ bf_classify <- function(bf, ciLo = NA_real_, ciHi = NA_real_,
   if (is.na(ciLo) || is.na(ciHi)) {
     if (bf > biasThreshold) return("bias-dominated")
     if (bf < effectThreshold) return("effect-dominated")
-    return("competitive")
+    return("mixed")
   }
   if (ciLo > biasThreshold) return("bias-dominated")
   if (ciHi < effectThreshold) return("effect-dominated")
-  "competitive"
+  "mixed"
 }

@@ -11,7 +11,7 @@ Description: Quantifies residual systematic bias in observational effect
     effect) attributable to systematic bias on a bounded 0-1 scale, and the
     bias-effect ratio (BER) expresses the same information as an unbounded
     ratio (BF = BER / (1 + BER)). Each estimate is classified as
-    bias-dominated, competitive, or effect-dominated. Provides log-scale (and
+    bias-dominated, mixed, or effect-dominated. Provides log-scale (and
     logit-scale) bootstrap confidence intervals with bootstrap-median point
     estimates, a Fieller confidence set for the underlying ratio,
     leave-one-out sensitivity analysis, negative control diagnostics, and

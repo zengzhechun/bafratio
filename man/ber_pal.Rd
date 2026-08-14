@@ -18,7 +18,7 @@ theme_biasratio(baseSize = 12)
 }
 \description{
 \code{ber_pal()} returns the canonical three-zone colors used across all
-biasratio plots: red for bias-dominated, amber for competitive, green for
+biasratio plots: red for bias-dominated, amber for mixed, green for
 effect-dominated. Zone membership is always also encoded by position and
 text labels, so the plots remain readable for color-blind readers.
 }

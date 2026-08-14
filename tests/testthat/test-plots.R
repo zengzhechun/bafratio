@@ -59,7 +59,7 @@ test_that("S3 plot methods dispatch and print", {
 
 test_that("ber_pal exposes the three-zone colors and theme builds", {
   pal <- ber_pal()
-  expect_named(pal, c("bias-dominated", "competitive", "effect-dominated"))
+  expect_named(pal, c("bias-dominated", "mixed", "effect-dominated"))
   expect_true(all(grepl("^#[0-9A-Fa-f]{6}$", pal)))
   expect_s3_class(theme_biasratio(), "theme")
 })

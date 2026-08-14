@@ -55,7 +55,7 @@ scales:
 | Zone | BF | BER | Reading |
 | --- | --- | --- | --- |
 | bias-dominated | > 0.5 (or CI entirely above 0.5) | > 1 | Bias exceeds the calibrated signal |
-| competitive | 1/3-0.5 | 0.5-1 | Bias and signal are comparable |
+| mixed | 1/3-0.5 | 0.5-1 | Bias and signal are comparable |
 | effect-dominated | < 1/3 (or CI entirely below 1/3) | < 0.5 | Signal clearly exceeds bias |
 
 ## Case 1: a "protective effect" made of bias (simulated)
