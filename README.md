@@ -103,6 +103,11 @@ p = 0.65), and the bias fraction is BF = 0.88 (95% CI, 0.75-0.99): bias
 accounts for roughly nine tenths of the calibrated signal. Read BF near
 1 as *signal saturation by bias*, not as a precise fraction.
 
+Calling `plot(fit)` on a `biasratio` object shows the **BF gauge** by
+default (bounded [0, 1], so it never gets squeezed by a wide bootstrap
+CI the way the unbounded BER gauge can); `plot_gauge(fit)` is the
+ratio-scale alternative for readers who prefer BER.
+
 ``` r
 plot_null(fit)
 ```

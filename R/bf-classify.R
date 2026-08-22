@@ -20,6 +20,14 @@
 #' @return A character scalar: `"bias-dominated"`, `"mixed"`,
 #'   `"effect-dominated"`, or `"unclassifiable"` (when `bf` is `NA`/`NaN`).
 #'
+#' @details
+#' This function shares the single classification kernel with
+#' [ber_classify()]: it maps the BF and the thresholds/CI limits to the BER
+#' scale via \eqn{\mathrm{BER} = \mathrm{BF}/(1-\mathrm{BF})} and calls the
+#' kernel. The two functions are therefore guaranteed identical by
+#' construction; `bf_classify(b, t) == ber_classify(b/(1-b), t/(1-t))` for
+#' any in-domain inputs.
+#'
 #' @export
 #' @examples
 #' bf_classify(0.91)                         # 点估计：偏倚主导
@@ -29,14 +37,15 @@
 bf_classify <- function(bf, ciLo = NA_real_, ciHi = NA_real_,
                         biasThreshold = 0.5, effectThreshold = 1 / 3) {
   if (length(bf) != 1L || is.na(bf)) return("unclassifiable")
-  # 为什么有 CI 时用区间分类：点估计的落区会被抽样不确定性轻易跨越，
-  # 用 CI 下/上界做判据更保守、可重复
+  # 统一内核在 BER 尺度；BF 经单调映射 .to_ber 转换后调用，保证与
+  # ber_classify 严格等价（见 .classify_ber 注释）。
   if (is.na(ciLo) || is.na(ciHi)) {
-    if (bf > biasThreshold) return("bias-dominated")
-    if (bf < effectThreshold) return("effect-dominated")
-    return("mixed")
+    .classify_ber(.to_ber(bf),
+                  biasThreshold = .to_ber(biasThreshold),
+                  effectThreshold = .to_ber(effectThreshold))
+  } else {
+    .classify_ber(.to_ber(bf), ciLo = .to_ber(ciLo), ciHi = .to_ber(ciHi),
+                  biasThreshold = .to_ber(biasThreshold),
+                  effectThreshold = .to_ber(effectThreshold))
   }
-  if (ciLo > biasThreshold) return("bias-dominated")
-  if (ciHi < effectThreshold) return("effect-dominated")
-  "mixed"
 }

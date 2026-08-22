@@ -39,6 +39,14 @@ scale (BF > 0.5 equals BER > 1; BF < 1/3 equals BER < 0.5). When a
 bootstrap confidence interval is available, the classification uses the
 interval (conservative); otherwise it falls back to the point estimate.
 }
+\details{
+This function shares the single classification kernel with
+\code{\link[=ber_classify]{ber_classify()}}: it maps the BF and the thresholds/CI limits to the BER
+scale via \eqn{\mathrm{BER} = \mathrm{BF}/(1-\mathrm{BF})} and calls the
+kernel. The two functions are therefore guaranteed identical by
+construction; \code{bf_classify(b, t) == ber_classify(b/(1-b), t/(1-t))} for
+any in-domain inputs.
+}
 \examples{
 bf_classify(0.91)                         # 点估计：偏倚主导
 bf_classify(0.91, ciLo = 0.74, ciHi = 0.99) # CI 下界 > 0.5：偏倚主导

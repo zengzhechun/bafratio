@@ -4,9 +4,17 @@
 
 #' BER gauge: point estimate and CI on the three-zone scale
 #'
-#' The signature plot of the package. Shows the BER (and its bootstrap CI,
-#' when available) on a log-scaled number line divided into the three
-#' credibility zones.
+#' Shows the BER (and its bootstrap CI, when available) on a log-scaled
+#' number line divided into the three credibility zones.
+#'
+#' @details
+#' The package's **default** plot for a `biasratio` object is the bounded
+#' BF gauge ([plot_bf_gauge()]): the paper speaks in bias fractions, and the
+#' BF lives on the unit interval (0 to 1), so it never suffers the
+#' window-adaptation squeezing that a long right-skewed BER axis can hit
+#' when a bootstrap CI is very wide. `plot_gauge()` (BER scale) is retained
+#' for readers who prefer the ratio language; both plots encode the same
+#' three zones.
 #'
 #' @param x An object of class `biasratio` (uses its bootstrap CI) or `ber`
 #'   (point estimate only).

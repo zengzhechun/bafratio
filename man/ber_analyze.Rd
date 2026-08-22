@@ -12,10 +12,11 @@ ber_analyze(
   ncSeLogRr,
   ncNames = NULL,
   nBoot = 2000,
-  seed = 42,
+  seed = NULL,
   level = 0.95,
   loo = FALSE,
-  looBoot = 500
+  looBoot = 500,
+  method = c("plugin", "robust")
 )
 
 bsr_analyze(
@@ -25,10 +26,11 @@ bsr_analyze(
   ncSeLogRr,
   ncNames = NULL,
   nBoot = 2000,
-  seed = 42,
+  seed = NULL,
   level = 0.95,
   loo = FALSE,
-  looBoot = 500
+  looBoot = 500,
+  method = c("plugin", "robust")
 )
 }
 \arguments{
@@ -49,7 +51,12 @@ or \verb{NC1 ... NCK} when no names are available.}
 
 \item{nBoot}{Number of bootstrap replicates (default 2000).}
 
-\item{seed}{Optional random seed for reproducibility.}
+\item{seed}{Optional random seed for reproducibility of the bootstrap
+and leave-one-out resampling. Defaults to \code{NULL}, in which case no seed
+is set and the caller's RNG is left untouched — passing a seed does
+\strong{not} pollute the global RNG stream (it is localized with
+\code{\link[withr:with_seed]{withr::with_seed()}}). Reproducibility is therefore the caller's
+responsibility unless a seed is supplied.}
 
 \item{level}{Confidence level (default 0.95).}
 
@@ -57,6 +64,18 @@ or \verb{NC1 ... NCK} when no names are available.}
 
 \item{looBoot}{Bootstrap replicates per leave-one-out iteration
 (default 500; only used when \code{loo = TRUE}).}
+
+\item{method}{Calibrated p-value method. \code{"plugin"} (default) uses the
+Gaussian / null-normal calibrated p-value from
+\code{\link[EmpiricalCalibration:calibrateP]{EmpiricalCalibration::calibrateP()}} — the OHDSI convention and the
+historical default of this package. \code{"robust"} applies the small-sample
+correction from the companion paper's eAppendix 13: it inflates the
+plug-in variance by the estimation variance of the empirical-null mean,
+\eqn{\widehat{\mathrm{Var}}(\hat\mu_B)=[\sum_k(\hat\tau_k^2+\hat\sigma_B^2)^{-1}]^{-1}},
+and references a Student-t distribution with \eqn{K-2} degrees of
+freedom. Use \code{"robust"} (or report it as a sensitivity) when the number
+of negative controls is below ~20, where the plug-in p-value is
+materially anti-conservative.}
 }
 \value{
 An object of class \code{biasratio}: a list with components

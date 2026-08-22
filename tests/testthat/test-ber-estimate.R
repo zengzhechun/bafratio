@@ -7,7 +7,9 @@ test_that("ber_estimate returns a well-formed ber object", {
   expect_s3_class(est, "ber")
   expect_named(est, c("mu_bias", "sigma_bias", "log_rr_uncal", "se_log_rr",
                       "log_rr_cal", "se_log_rr_cal", "rr_uncal", "rr_cal",
-                      "rr_bias", "bf", "ber", "p_uncal", "cal_p", "classification",
+                      "rr_bias", "bf", "ber", "p_uncal", "cal_p",
+                      "cal_p_plugin", "cal_p_robust", "cal_method",
+                      "var_mu_bias", "classification",
                       "nc_log_rr", "nc_se_log_rr", "nc_names", "null_fit"))
   expect_equal(est$nc_names, sim_nc$outcome)
 })

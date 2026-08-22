@@ -8,7 +8,9 @@
 #' @param nBoot Bootstrap replicates per exclusion (default 500). Set to 0
 #'   to skip confidence intervals (point estimates only).
 #' @param seed Optional random seed. When supplied, iteration `i` uses
-#'   `seed + i`, so results are reproducible without stream coupling.
+#'   `seed + i`, so results are reproducible without stream coupling. The
+#'   seed is localized by [ber_bootstrap()] and does not pollute the global
+#'   RNG stream.
 #'
 #' @return A data frame of class `ber_loo` with one row per excluded
 #'   negative control: `excluded`, `ber`, `ci_lo`, `ci_hi`, `classification`.
@@ -20,7 +22,9 @@
 #'                ncNames = sim_nc$outcome, nBoot = 100, seed = 1)
 #' loo
 ber_loo <- function(logRr, seLogRr, ncLogRr, ncSeLogRr, ncNames = NULL,
-                    nBoot = 500, seed = NULL) {
+                    nBoot = 500, seed = NULL,
+                    method = c("plugin", "robust")) {
+  method <- match.arg(method)
   checkEstimateInputs(logRr, seLogRr, ncLogRr, ncSeLogRr)
   ncNames <- resolveNcNames(ncNames, ncLogRr)
   K <- length(ncLogRr)
@@ -34,7 +38,8 @@ ber_loo <- function(logRr, seLogRr, ncLogRr, ncSeLogRr, ncNames = NULL,
   classVec <- character(K)
 
   for (i in seq_len(K)) {
-    est <- ber_estimate(logRr, seLogRr, ncLogRr[-i], ncSeLogRr[-i])
+    est <- ber_estimate(logRr, seLogRr, ncLogRr[-i], ncSeLogRr[-i],
+                       method = method)
     berVec[i] <- est$ber
     if (nBoot > 0) {
       boot <- ber_bootstrap(

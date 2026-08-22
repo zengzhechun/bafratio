@@ -1,0 +1,111 @@
+---
+title: "Quick start: auditing an effect with the bias fraction"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Quick start: auditing an effect with the bias fraction}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 8.5,
+  fig.height = 3.4,
+  dpi = 130,
+  out.width = "95%"
+)
+library(biasratio)
+```
+
+## In ten minutes
+
+This vignette walks through the whole `biasratio` workflow on the package's
+built-in synthetic data, `sim_nc` (12 negative control outcomes) and
+`sim_est` (one primary estimate). The scenario is a classic *healthy-adherer*
+bias: a drug looks protective (RR = 0.83) purely because of systematic
+error. No real patient data are involved.
+
+Load the data and fit the full analysis in one call:
+
+```{r analyze}
+fit <- ber_analyze(
+  logRr     = sim_est$logRr,
+  seLogRr   = sim_est$seLogRr,
+  ncLogRr   = sim_nc$logRr,
+  ncSeLogRr = sim_nc$seLogRr,
+  ncNames   = sim_nc$outcome,
+  nBoot     = 2000,
+  seed      = 42,   # optional; reproducibility is your responsibility
+  loo       = TRUE
+)
+fit
+```
+
+## Read the result
+
+* **BF = 0.88** — about nine tenths of the calibrated signal is systematic
+  bias. BF > 0.5 means *bias-dominated*: the "effect" is more likely an
+  artifact than a fact.
+* The calibrated RR (= 1.02) and calibrated p (= 0.65) already tell you the
+  naive association vanishes after calibration; BF tells you *how much* of
+  the surviving signal is bias.
+* The CI-based classification (using the bootstrap interval) agrees:
+  *bias-dominated*.
+
+## Plots
+
+`plot(fit)` defaults to the bounded **BF gauge** (it lives on [0, 1], so a
+wide bootstrap CI can never squeeze the zones):
+
+```{r gauge, fig.width = 7, fig.height = 2.6}
+plot(fit)
+```
+
+For the ratio-scale view, use `plot_gauge(fit)`. The empirical null, the
+calibration, and the diagnostics are also one call each:
+
+```{r others, fig.width = 8.5, fig.height = 3}
+plot_null(fit)
+plot_calibration(fit)
+```
+
+## Small-sample robustness
+
+With only 12 controls, the plug-in calibrated p-value is materially
+anti-conservative (about 11% Type I error at nominal 5%, per the companion
+paper's eAppendix 13). Pass `method = "robust"` to apply the variance
+inflation plus t(K−2) correction:
+
+```{r robust}
+est <- ber_estimate(sim_est$logRr, sim_est$seLogRr,
+                    sim_nc$logRr, sim_nc$seLogRr, method = "robust")
+est$cal_p_plugin
+est$cal_p_robust
+```
+
+Here the conclusion is unchanged (both p-values are far from 0.05), but for
+studies with fewer than ~20 controls the robust value is the more honest
+one and should be reported as a sensitivity.
+
+## Fieller set and leave-one-out
+
+The Fieller confidence set for the underlying ratio degrades honestly when
+the calibrated effect is near zero. With a fitted object you no longer have
+to dig `var(boot$mu_draws)` out by hand:
+
+```{r fieller}
+boot <- fit$bootstrap
+fieller(fit, boot)
+```
+
+Leave-one-out sensitivity (already computed above with `loo = TRUE`) shows
+whether a single control drives the conclusion:
+
+```{r loo, fig.width = 8.5, fig.height = 3}
+plot_loo(fit$loo)
+```
+
+All 12 exclusions remain bias-dominated, so the conclusion is not owed to a
+single influential negative control.

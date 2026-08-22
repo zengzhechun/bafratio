@@ -16,9 +16,17 @@ plot_gauge(x, digits = 2)
 A \code{ggplot} object.
 }
 \description{
-The signature plot of the package. Shows the BER (and its bootstrap CI,
-when available) on a log-scaled number line divided into the three
-credibility zones.
+Shows the BER (and its bootstrap CI, when available) on a log-scaled
+number line divided into the three credibility zones.
+}
+\details{
+The package's \strong{default} plot for a \code{biasratio} object is the bounded
+BF gauge (\code{\link[=plot_bf_gauge]{plot_bf_gauge()}}): the paper speaks in bias fractions, and the
+BF lives on the unit interval (0 to 1), so it never suffers the
+window-adaptation squeezing that a long right-skewed BER axis can hit
+when a bootstrap CI is very wide. \code{plot_gauge()} (BER scale) is retained
+for readers who prefer the ratio language; both plots encode the same
+three zones.
 }
 \examples{
 fit <- ber_analyze(sim_est$logRr, sim_est$seLogRr,

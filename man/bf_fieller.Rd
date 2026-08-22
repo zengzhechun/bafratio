@@ -2,11 +2,26 @@
 % Please edit documentation in R/bf-fieller.R
 \name{bf_fieller}
 \alias{bf_fieller}
+\alias{bf_fieller.default}
+\alias{bf_fieller.ber}
+\alias{bf_fieller.biasratio}
 \title{Fieller confidence set for the ratio of bias to calibrated effect}
 \usage{
-bf_fieller(muBias, varMuBias, logRr, seLogRr, alpha = 0.05)
+bf_fieller(object, ...)
+
+\method{bf_fieller}{default}(muBias, varMuBias, logRr, seLogRr, alpha = 0.05)
+
+\method{bf_fieller}{ber}(object, boot, alpha = 0.05)
+
+\method{bf_fieller}{biasratio}(object, boot = object$bootstrap, alpha = 0.05)
 }
 \arguments{
+\item{object}{A \code{ber} or \code{biasratio} object (for the S3 methods), or the
+estimated mean systematic bias \eqn{\mu_B} (for the default method).}
+
+\item{...}{Ignored. (Present so the generic accepts the extra arguments of
+the \code{ber}/\code{biasratio} methods.)}
+
 \item{muBias}{Numeric scalar. Estimated mean systematic bias (from
 \code{\link[=ber_estimate]{ber_estimate()}}, component \code{mu_bias}).}
 
@@ -19,6 +34,9 @@ mean, or from the observed Fisher information.}
 \item{seLogRr}{Numeric scalar. Standard error of \code{logRr}.}
 
 \item{alpha}{Significance level (default 0.05 for a 95\% set).}
+
+\item{boot}{A \code{ber_boot} object providing the bootstrap resamples of the
+empirical-null mean; its variance estimates \eqn{\mathrm{Var}(\hat\mu_B)}.}
 }
 \value{
 A list with components \code{lo}, \code{hi} (bounds, \code{NA} when the region
@@ -40,14 +58,33 @@ With \eqn{m_1 = \hat\mu_B}, \eqn{m_2 = \tilde\psi = \log RR - \hat\mu_B},
 \eqn{v_{12} = -v_{11}} (the primary estimate is independent of the
 negative controls), the set contains all \eqn{\rho} satisfying
 \deqn{(m_1 - \rho m_2)^2 \le z^2_{\alpha/2}(v_{11} - 2\rho v_{12} + \rho^2 v_{22}).}
+
+The independence assumption \eqn{v_{12} = -v_{11}} treats the primary
+estimate and the negative-control-derived bias estimate as independent.
+It holds under simple random sampling of controls and a distinct primary
+analysis, but can be \strong{violated} under stratified/matched sampling,
+shared covariates, or a primary estimate that itself reuses the controls
+(e.g. a self-controlled design): there \eqn{v_{12} \neq -v_{11}} and the
+set is too narrow. In those settings, supply an explicit covariance or
+treat the set as a lower bound on uncertainty.
+
+\code{bf_fieller()} is an S3 generic. The low-level \code{\link[=bf_fieller.default]{bf_fieller.default()}}
+takes the quantities directly; \code{bf_fieller.ber()} and
+\code{bf_fieller.biasratio()} extract them from a fitted object together with
+a bootstrap (\code{ber_boot}), using \eqn{\mathrm{Var}(\hat\mu_B)} estimated
+from the variance of the bootstrap resamples of the empirical-null mean.
+The alias \code{\link[=fieller]{fieller()}} does the same.
 }
 \examples{
 fit <- ber_estimate(sim_est$logRr, sim_est$seLogRr,
                     sim_nc$logRr, sim_nc$seLogRr)
 boot <- ber_bootstrap(sim_est$logRr, sim_est$seLogRr,
                       sim_nc$logRr, sim_nc$seLogRr, nBoot = 500, seed = 42)
+# three equivalent ways to get the Fieller set
 bf_fieller(fit$mu_bias, var(boot$mu_draws, na.rm = TRUE),
            sim_est$logRr, sim_est$seLogRr)
+bf_fieller(fit, boot)
+fieller(fit, boot)
 }
 \references{
 Fieller EC. Some problems in interval estimation. \emph{Journal of the Royal

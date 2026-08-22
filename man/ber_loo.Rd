@@ -12,7 +12,8 @@ ber_loo(
   ncSeLogRr,
   ncNames = NULL,
   nBoot = 500,
-  seed = NULL
+  seed = NULL,
+  method = c("plugin", "robust")
 )
 
 bsr_loo(
@@ -22,7 +23,8 @@ bsr_loo(
   ncSeLogRr,
   ncNames = NULL,
   nBoot = 500,
-  seed = NULL
+  seed = NULL,
+  method = c("plugin", "robust")
 )
 }
 \arguments{
@@ -45,7 +47,21 @@ or \verb{NC1 ... NCK} when no names are available.}
 to skip confidence intervals (point estimates only).}
 
 \item{seed}{Optional random seed. When supplied, iteration \code{i} uses
-\code{seed + i}, so results are reproducible without stream coupling.}
+\code{seed + i}, so results are reproducible without stream coupling. The
+seed is localized by \code{\link[=ber_bootstrap]{ber_bootstrap()}} and does not pollute the global
+RNG stream.}
+
+\item{method}{Calibrated p-value method. \code{"plugin"} (default) uses the
+Gaussian / null-normal calibrated p-value from
+\code{\link[EmpiricalCalibration:calibrateP]{EmpiricalCalibration::calibrateP()}} — the OHDSI convention and the
+historical default of this package. \code{"robust"} applies the small-sample
+correction from the companion paper's eAppendix 13: it inflates the
+plug-in variance by the estimation variance of the empirical-null mean,
+\eqn{\widehat{\mathrm{Var}}(\hat\mu_B)=[\sum_k(\hat\tau_k^2+\hat\sigma_B^2)^{-1}]^{-1}},
+and references a Student-t distribution with \eqn{K-2} degrees of
+freedom. Use \code{"robust"} (or report it as a sensitivity) when the number
+of negative controls is below ~20, where the plug-in p-value is
+materially anti-conservative.}
 }
 \value{
 A data frame of class \code{ber_loo} with one row per excluded

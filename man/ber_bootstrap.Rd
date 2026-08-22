@@ -41,7 +41,10 @@ to be null.}
 
 \item{nBoot}{Number of bootstrap replicates (default 2000).}
 
-\item{seed}{Optional random seed for reproducibility.}
+\item{seed}{Optional random seed for reproducibility. Defaults to \code{NULL},
+in which case the caller's RNG is left untouched; when supplied, the
+seed is localized with \code{\link[withr:with_seed]{withr::with_seed()}} and does \strong{not} pollute the
+global RNG stream.}
 
 \item{level}{Confidence level (default 0.95).}
 

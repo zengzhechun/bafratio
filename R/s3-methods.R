@@ -118,6 +118,9 @@ plot.ber_loo <- function(x, ...) {
 
 #' @export
 plot.biasratio <- function(x, ...) {
-  print(plot_gauge(x, ...))
+  # P2-8: 默认出有界的 BF gauge 而非 BER gauge。论文以 BF 为第一语言，
+  # 且 BF 天然落在 [0,1]，不存在 BER 那种 log 窗口自适应挤压分区的问题；
+  # BER gauge 仍保留给偏好比值语言的读者（plot_gauge）。
+  print(plot_bf_gauge(x, ...))
   invisible(x)
 }

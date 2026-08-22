@@ -5,9 +5,23 @@
 \alias{bsr_estimate}
 \title{Estimate the bias fraction (BF) and the bias-effect ratio (BER)}
 \usage{
-ber_estimate(logRr, seLogRr, ncLogRr, ncSeLogRr, ncNames = NULL)
+ber_estimate(
+  logRr,
+  seLogRr,
+  ncLogRr,
+  ncSeLogRr,
+  ncNames = NULL,
+  method = c("plugin", "robust")
+)
 
-bsr_estimate(logRr, seLogRr, ncLogRr, ncSeLogRr, ncNames = NULL)
+bsr_estimate(
+  logRr,
+  seLogRr,
+  ncLogRr,
+  ncSeLogRr,
+  ncNames = NULL,
+  method = c("plugin", "robust")
+)
 }
 \arguments{
 \item{logRr}{Numeric scalar. Log of the uncalibrated effect estimate
@@ -24,6 +38,18 @@ to be null.}
 \item{ncNames}{Optional character vector of labels for the negative
 controls, used in plots and diagnostics. Defaults to \code{names(ncLogRr)},
 or \verb{NC1 ... NCK} when no names are available.}
+
+\item{method}{Calibrated p-value method. \code{"plugin"} (default) uses the
+Gaussian / null-normal calibrated p-value from
+\code{\link[EmpiricalCalibration:calibrateP]{EmpiricalCalibration::calibrateP()}} — the OHDSI convention and the
+historical default of this package. \code{"robust"} applies the small-sample
+correction from the companion paper's eAppendix 13: it inflates the
+plug-in variance by the estimation variance of the empirical-null mean,
+\eqn{\widehat{\mathrm{Var}}(\hat\mu_B)=[\sum_k(\hat\tau_k^2+\hat\sigma_B^2)^{-1}]^{-1}},
+and references a Student-t distribution with \eqn{K-2} degrees of
+freedom. Use \code{"robust"} (or report it as a sensitivity) when the number
+of negative controls is below ~20, where the plug-in p-value is
+materially anti-conservative.}
 }
 \value{
 An object of class \code{ber}: a list with components
@@ -42,8 +68,16 @@ bias, \code{NaN} when both are 0 (undefined).}
 \eqn{|\mu_B| / |\log RR_{cal}|}; \code{Inf} when the calibrated effect
 is exactly 0 with non-zero bias, \code{NaN} when both are 0.}
 \item{p_uncal}{Nominal two-sided p-value from the Wald statistic.}
-\item{cal_p}{Two-sided p-value calibrated against the empirical null,
+\item{cal_p}{Two-sided calibrated p-value for the selected \code{method}
+(\code{"plugin"} or \code{"robust"}). Equals \code{cal_p_plugin} under the default.}
+\item{cal_p_plugin}{Plug-in (Gaussian / null-normal) calibrated p-value,
 from \code{\link[EmpiricalCalibration:calibrateP]{EmpiricalCalibration::calibrateP()}}.}
+\item{cal_p_robust}{Small-sample robust calibrated p-value: variance
+inflation plus a t(K-2) reference distribution (eAppendix 13).}
+\item{cal_method}{The \code{method} used for \code{cal_p}.}
+\item{var_mu_bias}{Estimation variance of the empirical-null mean,
+\eqn{[\sum_k(\hat\tau_k^2+\hat\sigma_B^2)^{-1}]^{-1}}, used by the
+robust correction.}
 \item{classification}{Point-estimate-only classification; see
 \code{\link[=ber_classify]{ber_classify()}}.}
 \item{nc_log_rr, nc_se_log_rr, nc_names}{The negative control data.}
