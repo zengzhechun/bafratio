@@ -25,22 +25,19 @@ primary metric is the **bias fraction (BF)**, the share of the total
 calibrated signal attributable to systematic bias, on a bounded 0-1
 scale:
 
-$$
-\mathrm{BF} = \frac{|\mu_B|}{|\mu_B| + |\log RR_{\text{calibrated}}|}
-= \frac{|\text{systematic bias}|}{|\text{bias}| + |\text{effect remaining after calibration}|}
-$$
+$$\mathrm{BF} = \frac{|\mu_B|}{|\mu_B| + |\log RR_{\text{calibrated}}|}
+= \frac{|\text{systematic bias}|}{|\text{bias}| + |\text{effect remaining after calibration}|}$$
 
 The auxiliary **bias-effect ratio (BER)** expresses the same information
 as an unbounded ratio: $\mathrm{BER} = \mathrm{BF} / (1 - \mathrm{BF})$.
 
--   **BF &gt; 0.5** (BER &gt; 1) — bias accounts for more than half of
-    the calibrated signal (*bias-dominated*). The “effect” is more
-    likely an artifact than a fact.
--   **1/3 ≤ BF ≤ 0.5** (0.5 ≤ BER ≤ 1) — bias and signal are comparable
-    (*mixed*). Interpret with caution.
--   **BF &lt; 1/3** (BER &lt; 0.5) — the calibrated signal clearly
-    exceeds the bias (*effect-dominated*). The association survives the
-    bias audit.
+- **BF \> 0.5** (BER \> 1) — bias accounts for more than half of the
+  calibrated signal (*bias-dominated*). The “effect” is more likely an
+  artifact than a fact.
+- **1/3 ≤ BF ≤ 0.5** (0.5 ≤ BER ≤ 1) — bias and signal are comparable
+  (*mixed*). Interpret with caution.
+- **BF \< 1/3** (BER \< 0.5) — the calibrated signal clearly exceeds the
+  bias (*effect-dominated*). The association survives the bias audit.
 
 `biasratio` computes BF and BER with logit-scale (equivalently
 log-scale) bootstrap confidence intervals, bootstrap-median point
@@ -103,11 +100,6 @@ p = 0.65), and the bias fraction is BF = 0.88 (95% CI, 0.75-0.99): bias
 accounts for roughly nine tenths of the calibrated signal. Read BF near
 1 as *signal saturation by bias*, not as a precise fraction.
 
-Calling `plot(fit)` on a `biasratio` object shows the **BF gauge** by
-default (bounded [0, 1], so it never gets squeezed by a wide bootstrap
-CI the way the unbounded BER gauge can); `plot_gauge(fit)` is the
-ratio-scale alternative for readers who prefer BER.
-
 ``` r
 plot_null(fit)
 ```
@@ -129,13 +121,67 @@ plot_loo(fit$loo)
 
 <img src="man/figures/README-loo-1.png" alt="" width="80%" />
 
+## Two-layer screening
+
+The full workflow above tells you *how big* the bias is. When you must
+decide, for many exposure-outcome pairs at once, whether each estimate
+can serve as usable **effect evidence**, use `ber_screen()` (or its
+BER-scale alias `bf_screen()`). It applies a two-layer rule:
+
+1.  **Layer 1 (signal existence).** The calibrated p-value must be below
+    `cal_p_threshold` (default 0.05). Otherwise the verdict is
+    `"insufficient-evidence"` and Layer 2 is not entered.
+2.  **Layer 2 (bias share).** Conditional on a real signal,
+    `ber_screen()` looks up, in the reference simulation calibration
+    `bf_reliability`, the probability `P(bias-dominated)` that the
+    *true* regime is bias-dominated, given the BF point estimate and the
+    *width* of its 95% CI (a wide CI means the BF is poorly pinned down,
+    so the conservative maximum of the narrow-CI and wide-CI
+    probabilities is reported). The verdict then follows fixed bands:
+    `< 0.15` effect-evidence, `0.15-0.45` mixed / hypothesis-generating,
+    `0.45-0.65` competitive / inconclusive, `>= 0.65`
+    not-effect-evidence. The `explain()` method returns a plain-English
+    justification.
+
+``` r
+sc <- ber_screen(
+  logRr     = sim_est$logRr,
+  seLogRr   = sim_est$seLogRr,
+  ncLogRr   = sim_nc$logRr,
+  ncSeLogRr = sim_nc$seLogRr,
+  nBoot = 500, seed = 42
+)
+sc
+#> biasratio two-layer screening
+#> ========================================================
+#> Layer 1  calibrated p = 0.649  (threshold 0.05)  ->  NO signal
+#> --------------------------------------------------------
+#> Verdict: INSUFFICIENT EVIDENCE
+#> 
+#> Layer 1, signal existence: the calibrated p-value asks whether the observed association is distinguishable from chance after correcting for systematic error. Calibrated p = 0.649 versus the threshold 0.05. No real signal is established, so the result cannot yet be used as effect evidence. A real signal was not established at Layer 1 (calibrated p at or above the threshold), so the result cannot yet be used as effect evidence. Strengthen the negative controls or collect more data, then re-screen. Do not interpret the association as an effect.
+explain(sc)
+#> [1] "Layer 1, signal existence: the calibrated p-value asks whether the observed association is distinguishable from chance after correcting for systematic error. Calibrated p = 0.649 versus the threshold 0.05. No real signal is established, so the result cannot yet be used as effect evidence. A real signal was not established at Layer 1 (calibrated p at or above the threshold), so the result cannot yet be used as effect evidence. Strengthen the negative controls or collect more data, then re-screen. Do not interpret the association as an effect."
+
+plot(sc)            # BF gauge annotated with the screening verdict
+```
+
+<img src="man/figures/README-screen-1.png" alt="" width="80%" />
+
+The empirical null and the BF 95% CI come from the same fit as
+`ber_analyze()`; `ber_screen()` merely adds the Layer-1/Layer-2 decision
+and the reliability lookup. For a single pair you can pass a `biasratio`
+object directly (`ber_screen(fit)`), skipping the recomputation. The
+`bf_reliability` table (12 BF bins, 960,000 simulated repetitions) is
+shipped with the package and is the only data `ber_screen()` needs
+beyond the fit.
+
 ## What the metrics mean, in plain terms
 
-| Question                                                    | Metric  | Scale | Read as                                                           |
-|-------------------------------------------------------------|---------|-------|-------------------------------------------------------------------|
-| Of the signal that survives calibration, how much is bias?  | **BF**  | 0-1   | bias-dominated &gt; 0.5; mixed 1/3-0.5; effect-dominated &lt; 1/3 |
-| How many times larger is the bias than the residual effect? | **BER** | 0-∞   | BF/(1-BF); same three zones at 1 and 0.5                          |
-| Of the *uncalibrated* association, how much is bias?        | OBF     | 0-∞   | $\|\mu_B\| / \|\log RR_{\text{obs}}\|$; descriptive companion     |
+| Question | Metric | Scale | Read as |
+|----|----|----|----|
+| Of the signal that survives calibration, how much is bias? | **BF** | 0-1 | bias-dominated \> 0.5; mixed 1/3-0.5; effect-dominated \< 1/3 |
+| How many times larger is the bias than the residual effect? | **BER** | 0-∞ | BF/(1-BF); same three zones at 1 and 0.5 |
+| Of the *uncalibrated* association, how much is bias? | OBF | 0-∞ | $\|\mu_B\| / \|\log RR_{\text{obs}}\|$; descriptive companion |
 
 Report BF (with its CI and zone) alongside the calibrated p-value and
 the calibrated RR. The calibrated p-value answers *is there evidence of
@@ -144,16 +190,19 @@ surviving signal is bias?* Neither is a substitute for the other.
 
 ## Main functions
 
-| Function                                                                                                         | Purpose                                                                 |
-|------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------|
-| `ber_estimate()`                                                                                                 | fit the empirical null; BF and BER point estimates, calibrated RR and p |
-| `ber_bootstrap()`                                                                                                | bootstrap CIs (log/logit scale) + bootstrap-median point estimates      |
-| `ber_classify()`, `bf_classify()`                                                                                | three-zone classification (ratio / fraction scale)                      |
-| `bf_fieller()`                                                                                                   | Fieller confidence set for the ratio $\mu_B / \tilde\psi$               |
-| `ber_loo()`                                                                                                      | leave-one-out sensitivity over the negative controls                    |
-| `ber_diagnostics()`                                                                                              | standardized residuals, Shapiro-Wilk, Q-Q data                          |
-| `ber_analyze()`                                                                                                  | the whole workflow in one call                                          |
-| `plot_bf_gauge()`, `plot_gauge()`, `plot_null()`, `plot_calibration()`, `plot_qq()`, `plot_loo()`, `plot_boot()` | visualizations                                                          |
+| Function | Purpose |
+|----|----|
+| `ber_estimate()` | fit the empirical null; BF and BER point estimates, calibrated RR and p |
+| `ber_bootstrap()` | bootstrap CIs (log/logit scale) + bootstrap-median point estimates |
+| `ber_classify()`, `bf_classify()` | three-zone classification (ratio / fraction scale) |
+| `bf_fieller()` | Fieller confidence set for the ratio $\mu_B / \tilde\psi$ |
+| `ber_loo()` | leave-one-out sensitivity over the negative controls |
+| `ber_diagnostics()` | standardized residuals, Shapiro-Wilk, Q-Q data |
+| `ber_analyze()` | the whole workflow in one call |
+| `ber_screen()`, `bf_screen()` | two-layer screening (signal-existence + bias-share) into an effect-evidence verdict |
+| `explain()` | plain-English justification of a `ber_screen` verdict |
+| `bf_reliability` | shipped reference calibration table (12 bins, 960,000 reps) used by Layer 2 |
+| `plot_bf_gauge()`, `plot_gauge()`, `plot_null()`, `plot_calibration()`, `plot_qq()`, `plot_loo()`, `plot_boot()` | visualizations |
 
 ## Background and assumptions
 
@@ -169,7 +218,7 @@ cannot be verified from the data; its plausibility must be argued from
 domain knowledge, and the leave-one-out and Fieller analyses probe how
 far the conclusions depend on it.
 
-Do not use the metrics when negative controls are few (&lt; 5, ideally ≥
+Do not use the metrics when negative controls are few (\< 5, ideally ≥
 10), non-exchangeable, or point in opposite directions, or when the
 calibrated effect is near zero (BF near 1 signals saturation; the exact
 value should not be over-interpreted).

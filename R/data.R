@@ -39,3 +39,34 @@
 
 #' @rdname sim_nc
 "sim_est"
+
+#' Reference calibration table for the two-layer screening
+#'
+#' Bias-dominated probability by bias-fraction (BF) bin, estimated from the
+#' 960-condition BF estimator simulation study (manuscript v38: five-factor
+#' full factorial design). Used by [ber_screen()] / [bf_screen()] for Layer 2.
+#'
+#' A bootstrap CI that is *narrow* (half-width <= `med_ci_width`) pins the BF
+#' down well, so the true regime is less often bias-dominated than when the CI
+#' is *wide*. The screening therefore reads both columns and reports the
+#' conservative maximum. The caller never needs to know which column applied.
+#'
+#' @format A data frame with 12 rows and 3 columns:
+#' \describe{
+#'   \item{bf_center}{BF bin center (share of the calibrated signal that is systematic bias).}
+#'   \item{p_bias_dom_narrow}{P(true regime is bias-dominated) given a narrow bootstrap CI.}
+#'   \item{p_bias_dom_wide}{P(true regime is bias-dominated) given a wide bootstrap CI.}
+#' }
+#'
+#' Attributes: `med_ci_width` (0.130, the median bootstrap-CI half-width across
+#' the simulation; the narrow/wide cut point) and `source` (provenance).
+#'
+#' @source BF estimator simulation, manuscript v37 (640 conditions). Bundled as
+#'   the default reference calibration; override via the `reliability` argument
+#'   of [ber_screen()] for other simulation designs.
+#'
+#' @examples
+#' data(bf_reliability)
+#' bf_reliability
+#' attr(bf_reliability, "med_ci_width")
+"bf_reliability"

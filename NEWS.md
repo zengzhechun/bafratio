@@ -1,3 +1,32 @@
+# biasratio 0.3.0 (2026-08-26)
+
+Two-layer screening API for judging whether an observational effect estimate
+can serve as effect evidence (manuscript v37 discussion, 2026-08-26):
+
+* **New `ber_screen()` / `bf_screen()` (alias).** Implements the two-layer
+  screening: Layer 1 compares the calibrated p-value with a threshold
+  (default 0.05) to establish a real signal; Layer 2 uses the bias fraction
+  `BF` and its 95% CI to look up, in the reference simulation calibration
+  `bf_reliability`, the probability that the true regime is bias-dominated,
+  and maps it to a verdict band (`< 0.15` effect-evidence, `0.15-0.45` mixed /
+  hypothesis-generating, `0.45-0.65` competitive / inconclusive,
+  `>= 0.65` not-effect-evidence; Layer-1 fail = insufficient-evidence).
+* **Conservative, internally-hidden narrow/wide logic.** The bootstrap-CI
+  width is split into narrow/wide by the reference median half-width
+  (`med_ci_width = 0.133`); both conditional P(bias-dominated) values are read
+  and the reported value is the conservative maximum. Callers only supply
+  `BF` and its 95% CI; the narrow/wide distinction never reaches the user.
+* **English interpretation as a first-class output.** `print.ber_screen()`
+  shows the numeric decision and `explain()` returns a plain-English
+  interpretation string; `summary.ber_screen()` returns a one-row data frame.
+* **New dataset `bf_reliability`.** The 12-bin reference calibration
+  (narrow/wide P(bias-dominated) by BF bin) from the 960-condition BF
+  estimator simulation (manuscript v38: five-factor full factorial, 960 x 1000 = 960,000 reps), with `med_ci_width` (0.130) and `source`
+  attributes. Overridable via the `reliability` argument of `ber_screen()`.
+* Accepts either raw inputs or a fitted `biasratio` object (from
+  `ber_analyze()`), reusing its bootstrap without recomputation.
+* `Depends: R (>= 4.1)` declared.
+
 # biasratio 0.2.1 (2026-08-23)
 
 P0/P1 fixes from the ox-alpha code review:

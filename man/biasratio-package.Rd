@@ -23,6 +23,8 @@ point estimates
 \item \code{\link[=ber_loo]{ber_loo()}} — leave-one-out sensitivity analysis
 \item \code{\link[=ber_diagnostics]{ber_diagnostics()}} — empirical null fit diagnostics
 \item \code{\link[=ber_analyze]{ber_analyze()}} — full workflow in one call
+\item \code{\link[=ber_screen]{ber_screen()}}, \code{\link[=bf_screen]{bf_screen()}} — two-layer screening (calibrated p +
+BF/CI) with an English interpretation via \code{\link[=explain]{explain()}}
 \item \code{\link[=plot_bf_gauge]{plot_bf_gauge()}}, \code{\link[=plot_gauge]{plot_gauge()}}, \code{\link[=plot_null]{plot_null()}},
 \code{\link[=plot_calibration]{plot_calibration()}}, \code{\link[=plot_qq]{plot_qq()}}, \code{\link[=plot_loo]{plot_loo()}}, \code{\link[=plot_boot]{plot_boot()}} —
 visualizations

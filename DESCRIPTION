@@ -1,6 +1,6 @@
 Package: biasratio
 Title: Bias Fraction and Bias-Effect Ratio: Quantifying Residual Systematic Bias in Observational Studies
-Version: 0.2.1
+Version: 0.3.0
 Authors@R: c(
     person("Zhechun", "Zeng", , "zengzhechun@users.noreply.github.com", role = c("aut", "cre"))
   )
@@ -36,3 +36,5 @@ URL: https://github.com/zengzhechun/biasratio
 BugReports: https://github.com/zengzhechun/biasratio/issues
 Language: en-US
 RoxygenNote: 8.0.0
+Depends: 
+    R (>= 4.1)

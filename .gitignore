@@ -10,3 +10,12 @@ smoke_plots/
 smoke_out.txt
 tests/testthat/Rplots.pdf
 README.html
+
+# development-phase failure snapshots (not part of the package)
+tests/testthat/_problems/
+
+# R CMD check scratch + review snapshots (not part of the package)
+check_tmp/
+check_tmp.log
+Review_*.md
+*.Rcheck/

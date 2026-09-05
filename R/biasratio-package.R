@@ -15,6 +15,8 @@
 #' * [ber_loo()] — leave-one-out sensitivity analysis
 #' * [ber_diagnostics()] — empirical null fit diagnostics
 #' * [ber_analyze()] — full workflow in one call
+#' * [ber_screen()], [bf_screen()] — two-layer screening (calibrated p +
+#'   BF/CI) with an English interpretation via [explain()]
 #' * [plot_bf_gauge()], [plot_gauge()], [plot_null()],
 #'   [plot_calibration()], [plot_qq()], [plot_loo()], [plot_boot()] —
 #'   visualizations
