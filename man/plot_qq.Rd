@@ -7,7 +7,7 @@
 plot_qq(x)
 }
 \arguments{
-\item{x}{An object of class \code{ber_diag} or \code{biasratio}.}
+\item{x}{An object of class \code{baf_diag} or \code{bafratio}.}
 }
 \value{
 A \code{ggplot} object.
@@ -16,6 +16,6 @@ A \code{ggplot} object.
 Q-Q plot of standardized negative control residuals
 }
 \examples{
-d <- ber_diagnostics(sim_nc$logRr, sim_nc$seLogRr, ncNames = sim_nc$outcome)
+d <- baf_diagnostics(sim_nc$logRr, sim_nc$seLogRr, ncNames = sim_nc$outcome)
 plot_qq(d)
 }

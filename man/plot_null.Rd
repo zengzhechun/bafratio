@@ -7,7 +7,7 @@
 plot_null(x, labelAll = NULL)
 }
 \arguments{
-\item{x}{An object of class \code{ber} or \code{biasratio}.}
+\item{x}{An object of class \code{baf} or \code{bafratio}.}
 
 \item{labelAll}{Logical. Label every negative control (\code{TRUE}) or only
 potential outliers with |standardized residual| > 1.5 (\code{FALSE},
@@ -24,7 +24,7 @@ overlaid as a diamond: a diamond lying inside the cloud of negative
 controls is the visual signature of a bias-dominated association.
 }
 \examples{
-fit <- ber_estimate(sim_est$logRr, sim_est$seLogRr,
+fit <- baf_estimate(sim_est$logRr, sim_est$seLogRr,
                     sim_nc$logRr, sim_nc$seLogRr, ncNames = sim_nc$outcome)
 plot_null(fit)
 }

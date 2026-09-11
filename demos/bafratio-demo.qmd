@@ -1,0 +1,399 @@
+---
+title: "bafratio 实战演示：用阴性对照量化观察性效应估计中的偏倚"
+subtitle: "以心力衰竭指南导向治疗的一项（示例性）阴性对照研究为例"
+author: "Zeng Zhechun"
+date: "2026-09-05"
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    embed-resources: true
+    theme: cosmo
+    code-fold: false
+    fig-align: center
+    number-sections: true
+execute:
+  echo: true
+  warning: false
+  message: false
+  cache: false
+---
+
+# 概述
+
+在观察性研究中，一个统计学上显著的关联并不等于因果效应。经验校准（empirical calibration，Schuemie 等 2014）借助阴性对照结局（negative control outcomes）回答"残余系统性偏倚能否解释你的点估计"，通过校准 p 值给出二元判定。但 p 值把偏倚的"大小"与估计的"精度"混在一起，且对偏倚相对于效应存活量的"占比"只字未提。
+
+`bafratio` 用一对等价指标把二者分开。主指标是**偏倚分数（bias attribution fraction，BAF）**，即经校准后存活信号中可归因于系统性偏倚的比例，取值在 0 到 1 之间：
+
+$$
+\mathrm{BAF} = \frac{|\mu_B|}{|\mu_B| + |\log RR_{\text{calibrated}}|}
+= \frac{|\text{系统性偏倚}|}{|\text{偏倚}| + |\text{校准后存活的效应}|}
+$$
+
+辅助指标**偏倚效应比（bias-effect ratio，BER）**以无界比值表达同一信息：$\mathrm{BER} = \mathrm{BAF}/(1-\mathrm{BAF})$。
+
+- BAF > 0.5（BER > 1）：偏倚占校准信号的一半以上，称为 *bias-dominated*（偏倚主导），该"效应"更可能是假象。
+- 1/3 ≤ BAF ≤ 0.5（0.5 ≤ BER ≤ 1）：偏倚与信号相当，称为 *mixed*（混杂），需谨慎解读。
+- BAF < 1/3（BER < 0.5）：校准信号明显超过偏倚，称为 *effect-dominated*（效应主导），该关联通过了偏倚审计。
+
+本演示文档用一套**示例性**阴性对照研究数据，按"数据准备 → 函数调用 → 结果解读"的顺序，逐一演示 `bafratio` 的全部导出函数，并对每个函数给出可运行代码、真实输出（尤其是可视化）和详细解读。所有数值均由代码实时算出，读者可直接复现。
+
+> 说明：本文档的数据为演示而构造，基于某真实研究校准出的经验零假设（μB = −0.20，σB = 0.07），并非真实患者数据。它用于展示整套方法，不代表任何具体临床试验的结果。
+
+# 示例数据集：一项心衰阴性对照研究（数据准备）
+
+研究问题：在射血分数降低的心力衰竭（HFrEF）患者中，指南导向的药物治疗（guideline-directed medical therapy，GDMT，含 β 受体阻滞剂达标 + 肾素血管紧张素系统抑制剂 + 盐皮质激素受体拮抗剂）能否改善 1 年全因死亡？
+
+我们用两个治疗策略作为主估计（primary estimate），并用 12 个**阴性对照结局**来刻画该队列中普遍的系统性偏倚方向。阴性对照结局是那些与暴露（GDMT 使用）共享混杂结构、但不可能被 GDMT 因果影响的并发症或事件。
+
+下面在 R 中构造这套数据。经验零假设来自真实校准研究：系统性偏倚均值 μB = −0.20（保护性方向），标准差 σB = 0.07。我们据此从正态分布抽取 12 个阴性对照的 log 风险比，并给出两个主估计。
+
+```{r data-prep}
+library(bafratio)
+
+# 固定随机种子，保证阴性对照与 bootstrap 结果可复现
+set.seed(20260905)
+
+muB   <- -0.20   # 系统性偏倚均值（保护性方向）
+sigmaB <- 0.07   # 系统性偏倚标准差
+
+# 12 个阴性对照结局（与 GDMT 使用共享混杂，但不受 GDMT 因果影响）
+nc_names <- c(
+  "Hyperlipidemia", "Anemia", "Acute kidney injury", "Atrial fibrillation",
+  "Pneumonia", "Hypotension", "Tachycardia", "Fluid overload",
+  "COPD exacerbation", "Sepsis", "Venous thrombosis", "Hypoglycemia"
+)
+
+# 从经验零假设抽取 12 个阴性对照的 logRR 与 SE
+nc_logRr   <- rnorm(12, muB, sigmaB)
+nc_seLogRr <- round(runif(12, 0.04, 0.07), 4)
+
+# 两个主估计（治疗策略）
+# 策略 A：β 受体阻滞剂达到 ≥50% 目标剂量（健康依从者偏倚，校准后效应近 0）
+t1_logRr <- -0.18
+t1_se    <- 0.045
+# 策略 B：完整 GDMT（≥2/3 类的目标剂量），真实信号但受偏倚污染
+t2_logRr <- -0.50
+t2_se    <- 0.050
+
+# 整理成数据框便于查看
+nc_df <- data.frame(
+  negative_control = nc_names,
+  logRR = round(nc_logRr, 4),
+  seLogRR = nc_seLogRr,
+  stringsAsFactors = FALSE
+)
+knitr::kable(nc_df, digits = 4, caption = "12 个阴性对照结局的 log 风险比与标准误")
+```
+
+主估计汇总如下（策略 A 接近经验零假设均值，策略 B 偏离更远，预示校准后仍有真实信号）：
+
+```{r primary-summary}
+primary_df <- data.frame(
+  strategy = c("A: BB >=50% target dose", "B: full GDMT (>=2/3)"),
+  logRR = c(t1_logRr, t2_logRr),
+  seLogRR = c(t1_se, t2_se),
+  RR = round(exp(c(t1_logRr, t2_logRr)), 3)
+)
+knitr::kable(primary_df, digits = 4, caption = "两个主估计（治疗策略）")
+```
+
+# 第一步：拟合经验零假设 `baf_estimate()`
+
+`baf_estimate()` 用 12 个阴性对照拟合经验零假设（一个正态分布），给出偏倚的均值与标准差、BAF/BER 点估计、校准后的 RR 与校准 p 值。
+
+```{r ber-estimate}
+est1 <- baf_estimate(
+  logRr     = t1_logRr,
+  seLogRr   = t1_se,
+  ncLogRr   = nc_logRr,
+  ncSeLogRr = nc_seLogRr,
+  ncNames   = nc_names
+)
+est1
+```
+
+**解读。** 经验零假设估计为 `mu_B = r round(est1$mu_bias, 3)`、σB = `r round(est1$sigma_bias, 3)`，与构造时设定的 −0.20 / 0.07 基本一致，说明 12 个阴性对照成功重建了队列的系统性偏倚分布。策略 A 的未校准 RR = `r round(est1$rr_uncal, 3)`（看似保护性），但校准后 RR = `r round(est1$rr_cal, 3)`，校准 p 值 = `r round(est1$cal_p, 3)`。BAF 点估计 = `r round(est1$baf, 3)`，已经落在 bias-dominated 区（> 0.5）。也就是说，未经校准时看似保护性的关联，其绝大部分可由系统性偏倚解释。
+
+# 第二步：Bootstrap 置信区间 `baf_bootstrap()`
+
+点估计的 BAF 只是单点。我们用 `baf_bootstrap()` 在 log/logit 尺度做自助抽样，得到 BAF 与 BER 的 95% 置信区间，以及不会落在自身置信区间之外的自助中位数点估计。
+
+```{r ber-bootstrap}
+boot1 <- baf_bootstrap(
+  logRr     = t1_logRr,
+  seLogRr   = t1_se,
+  ncLogRr   = nc_logRr,
+  ncSeLogRr = nc_seLogRr,
+  nBoot     = 1000,
+  seed      = 42
+)
+cat("BER 95% CI      : [", round(boot1$ci_lo, 3), ", ", round(boot1$ci_hi, 3), "]\n", sep = "")
+cat("BAF  95% CI      : [", round(boot1$baf_ci_lo, 3), ", ", round(boot1$baf_ci_hi, 3), "]\n", sep = "")
+cat("BAF bootstrap-median : ", round(boot1$baf_median, 3), "\n", sep = "")
+```
+
+**解读。** BAF 的 95% 置信区间为 [`r round(boot1$baf_ci_lo, 3)`, `r round(boot1$baf_ci_hi, 3)`]，完全位于 0.5 之上，因此策略 A 属于 bias-dominated 的结论相当稳健。自助中位数点估计 `r round(boot1$baf_median, 3)` 落在置信区间内部，符合"自助中位数不会跑出自助置信区间"的设计。
+
+自助抽样的 BAF 分布本身也值得一看：
+
+```{r plot-boot}
+plot_boot(boot1)
+```
+
+该直方图展示 1000 次自助重抽样的 BAF 分布，红色虚线为自助中位数。分布整体贴近 1，再次说明偏倚几乎"吃掉"了全部校准信号（BAF 接近 1 表示信号被偏倚饱和，不应过度解读其精确数值）。
+
+# 第三步：三区分类 `ber_classify()` 与 `baf_classify()`
+
+`ber_classify()`（BER 尺度）与 `baf_classify()`（BAF 尺度）把点估计与置信区间归入 bias-dominated / mixed / effect-dominated 三区。两者在数学上等价，只是输入尺度不同。
+
+```{r ber-classify}
+# BER 尺度分类：输入 BER 点估计 + BER 的 CI 上下限
+cls_ber <- ber_classify(est1$ber, boot1$ci_lo, boot1$ci_hi)
+cls_ber
+
+# BAF 尺度分类：输入 BAF 自助中位数 + BAF 的 CI 上下限
+cls_bf <- baf_classify(boot1$baf_median, boot1$baf_ci_lo, boot1$baf_ci_hi)
+cls_bf
+```
+
+**解读。** 两个函数给出一致判定：BAF 的 95% CI 上界 `r round(boot1$baf_ci_hi, 3)` 仍大于 0.5，因此分类为 *bias-dominated*。`baf_classify()` 直接以 BAF 为输入，更适合在论文中报告（BAF 有界，不易被宽置信区间拉伸变形）。
+
+# 第四步：Fieller 置信集 `baf_fieller()` 与 `fieller()`
+
+BAF 是比值 $\mu_B / \tilde\psi$ 的单调变换。当分母（校准后存活效应）接近 0 时，普通 Wald 置信区间会失真。`baf_fieller()` 给出该比值的 Fieller 置信集，`fieller()` 是其基础版本。
+
+```{r baf-fieller}
+# 需要 baf_analyze 的拟合对象来提取经验零假设与校准效应
+fit1 <- baf_analyze(
+  logRr     = t1_logRr,
+  seLogRr   = t1_se,
+  ncLogRr   = nc_logRr,
+  ncSeLogRr = nc_seLogRr,
+  ncNames   = nc_names,
+  nBoot     = 1000,
+  seed      = 42
+)
+baf_fieller(fit1)
+fieller(fit1)
+```
+
+**解读。** `fieller()` 返回的 `contains_one` 与 `ci` 字段说明 Fieller 置信集是否包含 1（即偏倚与效应是否不可区分）。当校准后效应接近 0 时，Fieller 集可能是无界的，这正是 BAF 接近 1、"信号饱和"情形的数学对应。`baf_fieller()` 把同一结果直接映射到 BAF 尺度，便于与三区分类对照。
+
+# 第五步：留一法敏感性分析 `baf_loo()`
+
+`baf_loo()` 每次剔除一个阴性对照，重新拟合经验零假设并重算 BAF，检验结论是否依赖某一个阴性对照。
+
+```{r ber-loo}
+loo1 <- baf_loo(
+  logRr     = t1_logRr,
+  seLogRr   = t1_se,
+  ncLogRr   = nc_logRr,
+  ncSeLogRr = nc_seLogRr,
+  ncNames   = nc_names,
+  nBoot     = 200,
+  seed      = 1
+)
+loo1
+```
+
+```{r plot-loo}
+plot_loo(loo1)
+```
+
+**解读。** 留一法给出 12 次剔除后的 BAF（及分类）。若每次剔除后仍判为 bias-dominated，说明结论不依赖单个阴性对照；若出现某次翻转为 mixed 或 effect-dominated，则需警惕该阴性对照可能为"离群"或二者并非同质。图中每个点代表一次剔除后的 BAF，红色虚线为完整分析的值。
+
+# 第六步：诊断 `baf_diagnostics()`
+
+`baf_diagnostics()` 检验经验零假设的正态性假设：标准化残差、Shapiro-Wilk 检验、以及用于 Q-Q 图的数据。
+
+```{r ber-diagnostics}
+diag1 <- baf_diagnostics(
+  ncLogRr   = nc_logRr,
+  ncSeLogRr = nc_seLogRr,
+  ncNames   = nc_names
+)
+cat("Shapiro-Wilk p 值 :", round(diag1$shapiro_p, 4), "\n")
+cat("最大标准化残差    :", round(diag1$max_resid, 3),
+    " (", diag1$max_resid_name, ")\n", sep = "")
+```
+
+```{r plot-qq}
+plot_qq(diag1)
+```
+
+**解读。** Shapiro-Wilk p 值用于判断 12 个阴性对照的偏差是否近似正态。p 值较大（如 `r round(diag1$shapiro_p, 3)`）时不拒绝正态性，支持经验零假设的正态假定。Q-Q 图中点越贴近参考线，越说明残差来自同一正态总体。`max_resid_name` 指出偏离最大的阴性对照，便于人工复核。
+
+# 第七步：一体化分析流水线 `baf_analyze()`
+
+`baf_analyze()` 把上述步骤（拟合、Bootstrap、分类、诊断、可选留一法）合并为一次调用，返回 `bafratio` 对象。
+
+```{r ber-analyze}
+print(fit1)
+```
+
+**解读。** `fit1` 汇总了全部结果：经验零假设、BAF/BER 点估计与 95% CI、校准 RR 与校准 p 值、CI 三区分类，以及诊断与留一法（因 `loo = TRUE`）。这是向协作者或审稿人展示单条证据链最简洁的形式。
+
+接着给出两张核心诊断图。其一是零假设图，把主估计（菱形）与 12 个阴性对照（点）放在同一坐标轴上：
+
+```{r plot-null}
+plot_null(est1)
+```
+
+其二是校准图，展示经验零假设的密度与每个阴性对照的位置：
+
+```{r plot-calibration}
+plot_calibration(est1)
+```
+
+当主估计的菱形落在阴性对照云团内部（如本例），正是 bias-dominated 关联的视觉特征：主估计与"无因果效应的对照"无法区分。
+
+# 第八步：两层筛查 `baf_screen()`
+
+当需要对许多暴露-结局对批量判断"该估计能否作为效应证据"时，用 `baf_screen()`。它执行两层规则：
+
+1. **第一层（信号是否存在）**：校准 p 值须低于阈值（默认 0.05）。否则判定为 `insufficient-evidence`，不进入第二层。
+2. **第二层（偏倚占比）**：在确有信号的前提下，依据 BAF 点估计与其 95% CI 的宽度，在参考校准表 `baf_reliability` 中查表得到"真实情形为 bias-dominated"的概率 P(bias-dominated)（取窄 CI 与宽 CI 两种查表的保守最大值），再按固定区间给出判定：< 0.15 为 effect-evidence，0.15-0.45 为 mixed / hypothesis-generating，0.45-0.65 为 competitive / inconclusive，≥ 0.65 为 not-effect-evidence。`explain()` 给出该判定的通俗解释。
+
+对策略 A（已拟合的 `fit1` 对象），直接传入即可复用其 Bootstrap：
+
+```{r screen-A}
+sc1 <- baf_screen(fit1)
+sc1
+cat("\nexplain(sc1):\n")
+cat(explain(sc1), "\n")
+```
+
+**解读（策略 A）。** 因为校准 p 值 = `r round(sc1$layer1$cal_p, 3)` 高于 0.05，第一层未通过，判定为 *insufficient-evidence*（证据不足）。注意这与第三步的 bias-dominated 并不矛盾：三区分类只看 BAF 的置信区间（不论校准 p），而两层筛查要求先有真实信号。本例的未校准关联几乎全由偏倚构成，校准后效应近 0，因此"没有可据以判断偏倚占比的真实信号"，恰当结论是证据不足，而非"偏倚主导的有效效应"。
+
+对策略 B（默认方法，重新拟合）：
+
+```{r screen-B}
+sc2 <- baf_screen(
+  logRr     = t2_logRr,
+  seLogRr   = t2_se,
+  ncLogRr   = nc_logRr,
+  ncSeLogRr = nc_seLogRr,
+  ncNames   = nc_names,
+  nBoot     = 1000,
+  seed      = 42
+)
+sc2
+cat("\nexplain(sc2):\n")
+cat(explain(sc2), "\n")
+```
+
+**解读（策略 B）。** 策略 B 的校准 p 值低于 0.05，第一层通过，进入第二层。`baf_reliability` 查表给出 P(bias-dominated) = `r round(sc2$layer2$p_bias_dom, 3)`，落在 competitive / inconclusive 区间（0.45-0.65），判定为 *competitive*。含义是：策略 B 确有超出偏倚的真实信号，但偏倚仍可能占据近一半，尚不足以作为独立效应证据，需要更强阴性对照或更大样本后重筛。
+
+`bf_screen()` 与 `ber_screen()` 都是早期名称，0.4.0 起作为弃用别名保留：调用时给出弃用警告，返回值与 `baf_screen()` 一致。`summary()` 则给出数值化摘要：
+
+```{r screen-summary}
+summary(sc2)
+```
+
+筛查结果的可视化用 `plot()` 调用 `plot.baf_screen` 方法，在 BAF 仪表上标注判定：
+
+```{r plot-screen}
+plot(sc2)
+```
+
+# 可视化函数总览
+
+前面已在各步骤穿插展示了全部绘图函数，这里汇总其用途：
+
+| 函数 | 输入对象 | 用途 |
+|---|---|---|
+| `plot_baf_gauge()` | `bafratio` | BAF 仪表（0-1 有界，不会被宽 CI 拉伸） |
+| `plot_gauge()` | `bafratio` | BER 比值尺度仪表（偏好比值尺度的读者） |
+| `plot_null()` | `ber` | 零假设图：主估计 vs 阴性对照云团 |
+| `plot_calibration()` | `ber` | 经验零假设密度与对照位置 |
+| `plot_qq()` | `baf_diag` | 标准化残差 Q-Q 图 |
+| `plot_loo()` | `baf_loo` | 留一法 BAF 轨迹 |
+| `plot_boot()` | `baf_boot` | BAF 自助分布直方图 |
+| `plot()` / `plot.baf_screen` | `baf_screen` | 带筛查判定的 BAF 仪表 |
+
+下面补上 BAF 与 BER 两张仪表（基于 `fit1`），直观对比两种尺度：
+
+```{r plot-gauges}
+plot_baf_gauge(fit1)
+plot_gauge(fit1)
+```
+
+BAF 仪表固定 0-1，主估计指针贴近 1 表示信号被偏倚饱和；BER 仪表在比值尺度上，同样的情形下指针会指向很大的数值。论文中推荐优先报告 BAF 仪表，因为它不会因为宽置信区间而把坐标轴压缩变形。
+
+# 配色与主题 `baf_pal()` 与 `theme_bafratio()`
+
+`baf_pal()` 返回三区分类的配色（bias-dominated / mixed / effect-dominated），`theme_bafratio()` 是面向临床读者的 ggplot2 主题，可叠加到任意 ggplot 对象上。
+
+```{r theme-demo}
+# 三区配色
+baf_pal()
+
+# 把主题叠加到已有图上（以 Q-Q 图为例）
+library(ggplot2)
+plot_qq(diag1) + theme_bafratio()
+```
+
+**解读。** `baf_pal()` 的三种颜色与分类区一一对应，便于在自定义图形中保持视觉一致。`theme_bafratio()` 调整字体、网格与背景，使图形更适合插入临床论文或幻灯片。
+
+# 参考校准表 `baf_reliability`
+
+两层筛查第二层依赖的查表来自随包发布的 `baf_reliability`：12 个 BAF 区间、共 960,000 次模拟重复得到的窄/宽 CI 条件下 P(bias-dominated) 的参考值。
+
+```{r reliability}
+data(baf_reliability)
+cat("维度 :", nrow(baf_reliability), "行 x", ncol(baf_reliability), "列\n")
+cat("中位数 CI 半宽 (med_ci_width) :", round(attr(baf_reliability, "med_ci_width"), 4), "\n")
+knitr::kable(head(baf_reliability, 6), digits = 4,
+             caption = "baf_reliability 前 6 行（12 个 BAF 区间中的前几个）")
+```
+
+**解读。** `baf_screen()` 默认就读取这张表，用户通常无需直接操作它。当你有自己的模拟校准结果并想替换默认参考时，可把 `reliability` 参数指向自定义数据框（需含 `baf_center`、`p_bias_dom_narrow`、`p_bias_dom_wide` 三列，并带 `med_ci_width` 属性）。
+
+# 旧名兼容（弃用别名）
+
+0.4.0 把包名从 `biasratio` 改为 `bafratio`，并把公开函数前缀统一为 `baf_*`。旧名字全部保留可用，但调用时会发出弃用警告并提示新名，返回的数值与正式函数完全一致。
+
+| 旧名 | 新名 |
+|---|---|
+| `ber_estimate`、`bsr_estimate` | `baf_estimate` |
+| `ber_bootstrap`、`bsr_bootstrap` | `baf_bootstrap` |
+| `ber_analyze`、`bsr_analyze` | `baf_analyze` |
+| `ber_screen`、`bf_screen` | `baf_screen` |
+| `ber_loo`、`bsr_loo` | `baf_loo` |
+| `ber_diagnostics`、`bsr_diagnostics` | `baf_diagnostics` |
+| `ber_pal` | `baf_pal` |
+| `bf_classify` | `baf_classify` |
+| `bf_rules` | `baf_rules` |
+| `bf_fieller` | `baf_fieller` |
+| `plot_bf_gauge` | `plot_baf_gauge` |
+| `theme_biasratio` | `theme_bafratio` |
+| `bsr_classify` | `ber_classify`（该函数接收 BER 尺度输入，本身未改名） |
+
+```{r deprecated-alias}
+# 旧名照常可用，此处屏蔽弃用警告以保持输出整洁
+bsr_baf <- suppressWarnings(bsr_estimate(
+  logRr     = t1_logRr,
+  seLogRr   = t1_se,
+  ncLogRr   = nc_logRr,
+  ncSeLogRr = nc_seLogRr,
+  ncNames   = nc_names
+)$baf)
+cat("bsr_estimate 的 BAF =", round(bsr_baf, 3),
+    "（与 baf_estimate 的", round(est1$baf, 3), "一致）\n")
+```
+
+# 综合解读与建议
+
+把上述函数串起来，对这套示例数据可得两条证据链：
+
+- **策略 A（β 受体阻滞剂 ≥50% 目标剂量）**：未校准 RR = `r round(exp(t1_logRr), 3)`，看似保护性；12 个阴性对照揭示存在保护性系统偏倚（μB ≈ `r round(est1$mu_bias, 2)`）。校准后效应近 0（RR ≈ `r round(est1$rr_cal, 2)`，校准 p = `r round(est1$cal_p, 2)`），BAF ≈ `r round(boot1$baf_median, 2)` 且 95% CI 完全高于 0.5。两层筛查第一层即判 *insufficient-evidence*：没有可据以判断偏倚占比的真实信号。
+- **策略 B（完整 GDMT ≥2/3）**：校准后仍留真实信号（校准 p < 0.05），BAF ≈ `r round(sc2$layer2$baf, 2)`，P(bias-dominated) = `r round(sc2$layer2$p_bias_dom, 2)`，判为 *competitive*。即确有超出偏倚的效应，但偏倚仍可能占近一半，尚不能作为独立效应证据。
+
+给实际使用者的三条建议：
+
+1. 先报校准 p 值与校准 RR，再报 BAF（含 95% CI 与三区），二者回答不同问题，不可替代。
+2. 批量筛查时用 `baf_screen()`，让"是否需要更多/更强阴性对照"由第一层自动暴露，而非人工逐条判断。
+3. BAF 接近 1 表示信号被偏倚饱和，应解读为"偏倚主导"的定性结论，不要过度解读其精确数值；留一法与 Fieller 分析用于探查结论对个别阴性对照与分母近零情形的稳健性。
+
+完整代码、文档与说明文件已随 `bafratio` v0.3.0 推送至 GitHub（`https://github.com/zengzhechun/bafratio`）。

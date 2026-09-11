@@ -7,7 +7,7 @@
 plot_calibration(x, level = 0.95)
 }
 \arguments{
-\item{x}{An object of class \code{ber} or \code{biasratio}.}
+\item{x}{An object of class \code{baf} or \code{bafratio}.}
 
 \item{level}{Confidence level for the displayed intervals.}
 }
@@ -20,7 +20,7 @@ risks with their confidence intervals. The calibrated CI is wider because
 it incorporates the systematic error variance.
 }
 \examples{
-fit <- ber_estimate(sim_est$logRr, sim_est$seLogRr,
+fit <- baf_estimate(sim_est$logRr, sim_est$seLogRr,
                     sim_nc$logRr, sim_nc$seLogRr)
 plot_calibration(fit)
 }

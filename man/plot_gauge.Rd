@@ -7,7 +7,7 @@
 plot_gauge(x, digits = 2)
 }
 \arguments{
-\item{x}{An object of class \code{biasratio} (uses its bootstrap CI) or \code{ber}
+\item{x}{An object of class \code{bafratio} (uses its bootstrap CI) or \code{baf}
 (point estimate only).}
 
 \item{digits}{Rounding for annotations.}
@@ -20,8 +20,8 @@ Shows the BER (and its bootstrap CI, when available) on a log-scaled
 number line divided into the three credibility zones.
 }
 \details{
-The package's \strong{default} plot for a \code{biasratio} object is the bounded
-BAF gauge (\code{\link[=plot_bf_gauge]{plot_bf_gauge()}}): the paper speaks in bias attribution fractions, and the
+The package's \strong{default} plot for a \code{bafratio} object is the bounded
+BAF gauge (\code{\link[=plot_baf_gauge]{plot_baf_gauge()}}): the paper speaks in bias attribution fractions, and the
 BAF lives on the unit interval (0 to 1), so it never suffers the
 window-adaptation squeezing that a long right-skewed BER axis can hit
 when a bootstrap CI is very wide. \code{plot_gauge()} (BER scale) is retained
@@ -29,7 +29,7 @@ for readers who prefer the ratio language; both plots encode the same
 three zones.
 }
 \examples{
-fit <- ber_analyze(sim_est$logRr, sim_est$seLogRr,
+fit <- baf_analyze(sim_est$logRr, sim_est$seLogRr,
                    sim_nc$logRr, sim_nc$seLogRr, nBoot = 500, seed = 42)
 plot_gauge(fit)
 }

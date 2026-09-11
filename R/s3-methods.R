@@ -2,7 +2,7 @@
 # 设计原则：print 面向临床读者——先说结论（落区），再给关键数字，技术细节靠后。
 
 #' @export
-print.ber <- function(x, ...) {
+print.baf <- function(x, ...) {
   cat("Bias-effect ratio (BER) analysis\n")
   cat(strrep("=", 48), "\n", sep = "")
   cat(sprintf("Empirical null:  mu_B = %s, sigma_B = %s  (K = %d negative controls)\n",
@@ -12,22 +12,22 @@ print.ber <- function(x, ...) {
   cat(sprintf("Calibrated:      RR = %s,  calibrated p %s\n",
               fmtNum(x$rr_cal, 3), fmtP(x$cal_p)))
   cat(sprintf("BAF  = %s  (share of calibrated signal that is bias)\n",
-              fmtNum(x$bf, 3)))
+              fmtNum(x$baf, 3)))
   cat(sprintf("BER = %s  ->  %s\n",
               fmtNum(x$ber, 2), x$classification))
   cat(strrep("-", 48), "\n", sep = "")
   cat("Point-estimate classification; for CI-based classification\n")
-  cat("see ber_bootstrap() / ber_analyze().\n")
+  cat("see baf_bootstrap() / baf_analyze().\n")
   invisible(x)
 }
 
 #' @export
-print.ber_boot <- function(x, ...) {
+print.baf_boot <- function(x, ...) {
   cat("Bootstrap CI for the bias-effect ratio\n")
   cat(strrep("=", 48), "\n", sep = "")
   cat(sprintf("BAF  = %s,  %d%% CI [%s, %s]  (bootstrap median)\n",
-              fmtNum(x$bf_median, 3), round(x$level * 100),
-              fmtNum(x$bf_ci_lo, 3), fmtNum(x$bf_ci_hi, 3)))
+              fmtNum(x$baf_median, 3), round(x$level * 100),
+              fmtNum(x$baf_ci_lo, 3), fmtNum(x$baf_ci_hi, 3)))
   cat(sprintf("BER = %s,  %d%% CI [%s, %s]  (method = %s)\n",
               fmtNum(x$ber, 2), round(x$level * 100),
               fmtNum(x$ci_lo, 2), fmtNum(x$ci_hi, 2), x$method))
@@ -39,7 +39,7 @@ print.ber_boot <- function(x, ...) {
 }
 
 #' @export
-print.ber_diag <- function(x, ...) {
+print.baf_diag <- function(x, ...) {
   cat("Empirical null diagnostics\n")
   cat(strrep("=", 48), "\n", sep = "")
   cat(sprintf("mu_B = %s, sigma_B = %s\n", fmtNum(x$mu, 4), fmtNum(x$sigma, 4)))
@@ -52,16 +52,16 @@ print.ber_diag <- function(x, ...) {
 }
 
 #' @export
-print.biasratio <- function(x, ...) {
+print.bafratio <- function(x, ...) {
   est <- x$estimate
   boot <- x$bootstrap
-  cat("biasratio: full BER analysis\n")
+  cat("bafratio: full BER analysis\n")
   cat(strrep("=", 56), "\n", sep = "")
   cat(sprintf("Empirical null:  mu_B = %s, sigma_B = %s  (K = %d negative controls)\n",
               fmtNum(est$mu_bias, 3), fmtNum(est$sigma_bias, 3),
               length(est$nc_log_rr)))
   cat(sprintf("BAF  = %s  |  BER = %s\n",
-              fmtNum(boot$bf_median, 3), fmtNum(boot$ber_median, 2)))
+              fmtNum(boot$baf_median, 3), fmtNum(boot$ber_median, 2)))
   cat(sprintf("Uncalibrated:    RR = %s [%.3f, %.3f],  p %s\n",
               fmtNum(est$rr_uncal, 3),
               exp(est$log_rr_uncal - 1.96 * est$se_log_rr),
@@ -87,40 +87,40 @@ print.biasratio <- function(x, ...) {
 }
 
 #' @export
-summary.biasratio <- function(object, ...) {
+summary.bafratio <- function(object, ...) {
   print(object, ...)
   invisible(object)
 }
 
 #' @export
-plot.ber <- function(x, ...) {
+plot.baf <- function(x, ...) {
   print(plot_calibration(x, ...))
   invisible(x)
 }
 
 #' @export
-plot.ber_boot <- function(x, ...) {
+plot.baf_boot <- function(x, ...) {
   print(plot_boot(x, ...))
   invisible(x)
 }
 
 #' @export
-plot.ber_diag <- function(x, ...) {
+plot.baf_diag <- function(x, ...) {
   print(plot_qq(x, ...))
   invisible(x)
 }
 
 #' @export
-plot.ber_loo <- function(x, ...) {
+plot.baf_loo <- function(x, ...) {
   print(plot_loo(x, ...))
   invisible(x)
 }
 
 #' @export
-plot.biasratio <- function(x, ...) {
+plot.bafratio <- function(x, ...) {
   # P2-8: 默认出有界的 BAF gauge 而非 BER gauge。论文以 BAF 为第一语言，
   # 且 BAF 天然落在 [0,1]，不存在 BER 那种 log 窗口自适应挤压分区的问题；
   # BER gauge 仍保留给偏好比值语言的读者（plot_gauge）。
-  print(plot_bf_gauge(x, ...))
+  print(plot_baf_gauge(x, ...))
   invisible(x)
 }

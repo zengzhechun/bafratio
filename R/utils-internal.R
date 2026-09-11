@@ -1,5 +1,5 @@
 # Internal validation and formatting helpers (not exported).
-# 为什么集中校验：ber_estimate / ber_bootstrap / ber_loo 共享同一组输入，
+# 为什么集中校验：baf_estimate / baf_bootstrap / baf_loo 共享同一组输入，
 # 单一入口保证错误信息一致，测试只需锚定一套文案。
 
 checkEstimateInputs <- function(logRr, seLogRr, ncLogRr, ncSeLogRr) {
@@ -55,16 +55,16 @@ fmtNum <- function(x, digits = 2L) {
   sprintf(paste0("%.", digits, "f"), x)
 }
 
-# 从 biasratio 总对象或 ber 子对象中提取点估计对象，绘图函数共用的入口规整
+# 从 bafratio 总对象或 ber 子对象中提取点估计对象，绘图函数共用的入口规整
 asBerObject <- function(x) {
-  if (inherits(x, "biasratio")) return(x$estimate)
-  if (inherits(x, "ber")) return(x)
-  stop("`x` must be an object of class `ber` or `biasratio`.", call. = FALSE)
+  if (inherits(x, "bafratio")) return(x$estimate)
+  if (inherits(x, "baf")) return(x)
+  stop("`x` must be an object of class `baf` or `bafratio`.", call. = FALSE)
 }
 
 # 三区分类的单一内核，运行在 BER（比值）尺度上。
-# bf_classify 与 ber_classify 都通过它实现，保证跨尺度严格等价：
-# BAF 经单调变换 bf -> bf/(1-bf) 映射到 BER，阈值与 CI 限同步变换。
+# baf_classify 与 ber_classify 都通过它实现，保证跨尺度严格等价：
+# BAF 经单调变换 baf -> baf/(1-baf) 映射到 BER，阈值与 CI 限同步变换。
 # biasThreshold / effectThreshold 默认 1 / 0.5，正是 BAF 默认 0.5 / 1/3 的映射。
 .classify_ber <- function(ber, ciLo = NA_real_, ciHi = NA_real_,
                           biasThreshold = 1, effectThreshold = 0.5) {
@@ -81,5 +81,5 @@ asBerObject <- function(x) {
   "mixed"
 }
 
-# BAF -> BER 的单调映射；bf >= 1 视为偏倚主导（BER = Inf）。
-.to_ber <- function(bf) ifelse(bf >= 1, Inf, bf / (1 - bf))
+# BAF -> BER 的单调映射；baf >= 1 视为偏倚主导（BER = Inf）。
+.to_ber <- function(baf) ifelse(baf >= 1, Inf, baf / (1 - baf))

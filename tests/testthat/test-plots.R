@@ -1,5 +1,5 @@
 test_that("all plot functions return ggplot objects that build without error", {
-  fit <- ber_analyze(sim_est$logRr, sim_est$seLogRr,
+  fit <- baf_analyze(sim_est$logRr, sim_est$seLogRr,
                      sim_nc$logRr, sim_nc$seLogRr,
                      ncNames = sim_nc$outcome,
                      nBoot = 300, seed = 42, loo = TRUE, looBoot = 50)
@@ -24,7 +24,7 @@ test_that("plot_null labels outliers only when many NCs", {
   data(sccs, package = "EmpiricalCalibration")
   nc <- sccs[sccs$groundTruth == 0, ]
   pc <- sccs[sccs$groundTruth == 1, ]
-  est <- ber_estimate(pc$logRr, pc$seLogRr, nc$logRr, nc$seLogRr,
+  est <- baf_estimate(pc$logRr, pc$seLogRr, nc$logRr, nc$seLogRr,
                       ncNames = nc$drugName)
   p <- plot_null(est)
   expect_no_error(ggplot2::ggplot_build(p))
@@ -39,14 +39,14 @@ test_that("plot_null labels outliers only when many NCs", {
 })
 
 test_that("plot functions reject wrong input classes with clear errors", {
-  expect_error(plot_qq(42), "ber_diag")
-  expect_error(plot_loo(42), "ber_loo")
-  expect_error(plot_boot(42), "ber_boot")
-  expect_error(plot_gauge(42), "ber")
+  expect_error(plot_qq(42), "baf_diag")
+  expect_error(plot_loo(42), "baf_loo")
+  expect_error(plot_boot(42), "baf_boot")
+  expect_error(plot_gauge(42), "baf")
 })
 
 test_that("S3 plot methods dispatch and print", {
-  fit <- ber_analyze(sim_est$logRr, sim_est$seLogRr,
+  fit <- baf_analyze(sim_est$logRr, sim_est$seLogRr,
                      sim_nc$logRr, sim_nc$seLogRr,
                      ncNames = sim_nc$outcome,
                      nBoot = 300, seed = 42, loo = TRUE, looBoot = 50)
@@ -57,9 +57,9 @@ test_that("S3 plot methods dispatch and print", {
   expect_no_error(plot(fit$loo))
 })
 
-test_that("ber_pal exposes the three-zone colors and theme builds", {
-  pal <- ber_pal()
+test_that("baf_pal exposes the three-zone colors and theme builds", {
+  pal <- baf_pal()
   expect_named(pal, c("bias-dominated", "mixed", "effect-dominated"))
   expect_true(all(grepl("^#[0-9A-Fa-f]{6}$", pal)))
-  expect_s3_class(theme_biasratio(), "theme")
+  expect_s3_class(theme_bafratio(), "theme")
 })

@@ -10,3 +10,11 @@
 ^\.Rproj\.user$
 ^.*\.Rproj$
 ^\.DS_Store$
+^demos$
+^sample_code\.R$
+^Review_.*\.md$
+^check_tmp.*$
+^.*\.tar\.gz$
+^.*\.knit\.md$
+^.*\.rmarkdown$
+^.*_files$

@@ -16,12 +16,12 @@ knitr::opts_chunk$set(
   dpi = 130,
   out.width = "95%"
 )
-library(biasratio)
+library(bafratio)
 ```
 
 ## In ten minutes
 
-This vignette walks through the whole `biasratio` workflow on the package's
+This vignette walks through the whole `bafratio` workflow on the package's
 built-in synthetic data, `sim_nc` (12 negative control outcomes) and
 `sim_est` (one primary estimate). The scenario is a classic *healthy-adherer*
 bias: a drug looks protective (RR = 0.83) purely because of systematic
@@ -30,7 +30,7 @@ error. No real patient data are involved.
 Load the data and fit the full analysis in one call:
 
 ```{r analyze}
-fit <- ber_analyze(
+fit <- baf_analyze(
   logRr     = sim_est$logRr,
   seLogRr   = sim_est$seLogRr,
   ncLogRr   = sim_nc$logRr,
@@ -79,7 +79,7 @@ paper's eAppendix 13). Pass `method = "robust"` to apply the variance
 inflation plus t(K−2) correction:
 
 ```{r robust}
-est <- ber_estimate(sim_est$logRr, sim_est$seLogRr,
+est <- baf_estimate(sim_est$logRr, sim_est$seLogRr,
                     sim_nc$logRr, sim_nc$seLogRr, method = "robust")
 est$cal_p_plugin
 est$cal_p_robust

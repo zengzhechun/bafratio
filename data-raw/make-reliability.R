@@ -1,5 +1,5 @@
 # Provenance / generation script for the bundled reference calibration table
-# used by ber_screen() / bf_screen() (Layer 2 of the two-layer screening).
+# used by baf_screen() / bf_screen() (Layer 2 of the two-layer screening).
 #
 # The numbers below are the bias-dominated probability P(bias-dominated) by
 # bias-fraction (BAF) bin, estimated from the 960-condition BAF estimator
@@ -31,8 +31,8 @@ if (length(file_arg)) {
 }
 
 # Twelve-bin BAF estimator simulation calibration (manuscript v38, 960 x 1000).
-# bf_centre, p_bd_narrow, p_bd_wide taken from v38_part2_reliability_lookup.csv.
-bf_centers <- c(0.0927213667338725, 0.1833447469638830, 0.2654203256284330,
+# baf_center, p_bd_narrow, p_bd_wide taken from v38_part2_reliability_lookup.csv.
+baf_center <- c(0.0927213667338725, 0.1833447469638830, 0.2654203256284330,
                 0.3336647840111200, 0.3906129064194290, 0.4403526433339310,
                 0.4881238755070010, 0.5393525702996570, 0.5992885368231120,
                 0.6730183696294000, 0.7674044214492160, 0.8862049808498200)
@@ -47,16 +47,16 @@ p_bias_dom_wide <- c(0.03568062004678280, 0.07264874869856940, 0.138646075092727
                      0.64824654622741800, 0.76798986951494800, 0.85601222909835000,
                      0.90221886255502700, 0.93023301621068000, 0.97180859963192200)
 
-bf_reliability <- data.frame(
-  bf_center = bf_centers,
+baf_reliability <- data.frame(
+  baf_center = baf_center,
   p_bias_dom_narrow = p_bias_dom_narrow,
   p_bias_dom_wide = p_bias_dom_wide
 )
-attr(bf_reliability, "med_ci_width") <- 0.1298899
-attr(bf_reliability, "source") <-
+attr(baf_reliability, "med_ci_width") <- 0.1298899
+attr(baf_reliability, "source") <-
   "960-condition BAF estimator simulation (manuscript v38): five-factor full factorial (true effect psi, bias center mu_B, bias heterogeneity sigma_PS, number of negative controls K, exchangeability violation), 960 conditions x 1000 reps = 960,000 simulated target estimates; twelve-bucket lookup (Table 2), narrow/wide columns."
 
-out_file <- file.path(pkg_root, "data", "bf_reliability.rda")
-save(bf_reliability, file = out_file, compress = "gzip")
+out_file <- file.path(pkg_root, "data", "baf_reliability.rda")
+save(baf_reliability, file = out_file, compress = "gzip")
 cat("Wrote", out_file, "\n")
-print(bf_reliability)
+print(baf_reliability)

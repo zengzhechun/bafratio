@@ -7,7 +7,7 @@
 plot_boot(x, bins = 40)
 }
 \arguments{
-\item{x}{An object of class \code{ber_boot} or \code{biasratio}.}
+\item{x}{An object of class \code{baf_boot} or \code{bafratio}.}
 
 \item{bins}{Number of histogram bins.}
 }
@@ -18,7 +18,7 @@ A \code{ggplot} object.
 Bootstrap distribution of the BER
 }
 \examples{
-boot <- ber_bootstrap(sim_est$logRr, sim_est$seLogRr,
+boot <- baf_bootstrap(sim_est$logRr, sim_est$seLogRr,
                       sim_nc$logRr, sim_nc$seLogRr, nBoot = 500, seed = 42)
 plot_boot(boot)
 }

@@ -44,7 +44,7 @@
 #'
 #' Bias-dominated probability by bias-fraction (BAF) bin, estimated from the
 #' 960-condition BAF estimator simulation study (manuscript v38: five-factor
-#' full factorial design). Used by [ber_screen()] / [bf_screen()] for Layer 2.
+#' full factorial design). Used by [baf_screen()] / [bf_screen()] for Layer 2.
 #'
 #' A bootstrap CI that is *narrow* (half-width <= `med_ci_width`) pins the BAF
 #' down well, so the true regime is less often bias-dominated than when the CI
@@ -62,7 +62,7 @@
 #'
 #' @format A data frame with 12 rows and 3 columns:
 #' \describe{
-#'   \item{bf_center}{BAF bin center (share of the calibrated signal that is systematic bias).}
+#'   \item{baf_center}{BAF bin center (share of the calibrated signal that is systematic bias).}
 #'   \item{p_bias_dom_narrow}{P(true regime is bias-dominated) given a narrow bootstrap CI.}
 #'   \item{p_bias_dom_wide}{P(true regime is bias-dominated) given a wide bootstrap CI.}
 #' }
@@ -73,10 +73,15 @@
 #' @source BAF estimator simulation, manuscript v38 (five-factor full
 #'   factorial, 960 conditions x 1000 replicates). Bundled as the default
 #'   reference calibration; override via the `reliability` argument of
-#'   [ber_screen()] for other simulation designs.
+#'   [baf_screen()] for other simulation designs.
 #'
 #' @examples
-#' data(bf_reliability)
-#' bf_reliability
-#' attr(bf_reliability, "med_ci_width")
-"bf_reliability"
+#' data(baf_reliability)
+#' baf_reliability
+#' attr(baf_reliability, "med_ci_width")
+"baf_reliability"
+
+# baf_screen() uses `baf_reliability` as a default argument value. Lazy-loaded
+# data is not visible to R CMD check's static analysis, so declare it here to
+# keep "checking R code for possible problems" clean.
+utils::globalVariables("baf_reliability")

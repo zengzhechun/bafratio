@@ -1,17 +1,17 @@
-#' Color palette and ggplot2 theme for biasratio
+#' Color palette and ggplot2 theme for bafratio
 #'
-#' `ber_pal()` returns the canonical three-zone colors used across all
-#' biasratio plots: red for bias-dominated, amber for mixed, green for
+#' `baf_pal()` returns the canonical three-zone colors used across all
+#' bafratio plots: red for bias-dominated, amber for mixed, green for
 #' effect-dominated. Zone membership is always also encoded by position and
 #' text labels, so the plots remain readable for color-blind readers.
 #'
-#' @return `ber_pal()`: a named character vector of hex colors.
-#'   `theme_biasratio()`: a ggplot2 theme.
+#' @return `baf_pal()`: a named character vector of hex colors.
+#'   `theme_bafratio()`: a ggplot2 theme.
 #'
 #' @export
 #' @examples
-#' ber_pal()
-ber_pal <- function() {
+#' baf_pal()
+baf_pal <- function() {
   c(
     "bias-dominated" = "#C0392B",
     "mixed" = "#E67E22",
@@ -21,7 +21,7 @@ ber_pal <- function() {
 
 # 分类名到颜色的安全查找；unclassifiable 回退为墨色
 classColor <- function(classification) {
-  pal <- ber_pal()
+  pal <- baf_pal()
   if (length(classification) == 0L || is.na(classification) ||
       !classification %in% names(pal)) {
     return("#1B2A41")
@@ -29,10 +29,10 @@ classColor <- function(classification) {
   unname(pal[classification])
 }
 
-#' @rdname ber_pal
+#' @rdname baf_pal
 #' @param baseSize Base font size in points.
 #' @export
-theme_biasratio <- function(baseSize = 12) {
+theme_bafratio <- function(baseSize = 12) {
   ggplot2::theme_minimal(base_size = baseSize) +
     ggplot2::theme(
       plot.title = ggplot2::element_text(face = "bold", size = ggplot2::rel(1.05)),

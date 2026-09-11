@@ -8,33 +8,33 @@
 #' number line divided into the three credibility zones.
 #'
 #' @details
-#' The package's **default** plot for a `biasratio` object is the bounded
-#' BAF gauge ([plot_bf_gauge()]): the paper speaks in bias attribution fractions, and the
+#' The package's **default** plot for a `bafratio` object is the bounded
+#' BAF gauge ([plot_baf_gauge()]): the paper speaks in bias attribution fractions, and the
 #' BAF lives on the unit interval (0 to 1), so it never suffers the
 #' window-adaptation squeezing that a long right-skewed BER axis can hit
 #' when a bootstrap CI is very wide. `plot_gauge()` (BER scale) is retained
 #' for readers who prefer the ratio language; both plots encode the same
 #' three zones.
 #'
-#' @param x An object of class `biasratio` (uses its bootstrap CI) or `ber`
+#' @param x An object of class `bafratio` (uses its bootstrap CI) or `baf`
 #'   (point estimate only).
 #' @param digits Rounding for annotations.
 #'
 #' @return A `ggplot` object.
 #' @export
 #' @examples
-#' fit <- ber_analyze(sim_est$logRr, sim_est$seLogRr,
+#' fit <- baf_analyze(sim_est$logRr, sim_est$seLogRr,
 #'                    sim_nc$logRr, sim_nc$seLogRr, nBoot = 500, seed = 42)
 #' plot_gauge(fit)
 plot_gauge <- function(x, digits = 2) {
   est <- asBerObject(x)
-  hasCi <- inherits(x, "biasratio")
+  hasCi <- inherits(x, "bafratio")
   ciLo <- if (hasCi) x$bootstrap$ci_lo else NA_real_
   ciHi <- if (hasCi) x$bootstrap$ci_hi else NA_real_
   cls <- if (hasCi) x$classification else est$classification
   ber <- est$ber
   clsCol <- classColor(cls)
-  pal <- ber_pal()
+  pal <- baf_pal()
 
   # 窗口始终完整覆盖三个分区的边界与全部数据点
   lo <- min(0.08, ber / 2, if (hasCi) ciLo / 2 else Inf)
@@ -61,7 +61,7 @@ plot_gauge <- function(x, digits = 2) {
             fmtNum(ber, digits), round(x$bootstrap$level * 100),
             fmtNum(ciLo, digits), fmtNum(ciHi, digits), cls)
   } else {
-    sprintf("BER = %s  ->  %s (point estimate; run ber_bootstrap for a CI)",
+    sprintf("BER = %s  ->  %s (point estimate; run baf_bootstrap for a CI)",
             fmtNum(ber, digits), cls)
   }
 
@@ -95,7 +95,7 @@ plot_gauge <- function(x, digits = 2) {
       x = "BER (log scale)", y = NULL,
       caption = "Zones: BER < 0.5 effect-dominated | 0.5-1 mixed | > 1 bias-dominated"
     ) +
-    theme_biasratio() +
+    theme_bafratio() +
     ggplot2::theme(
       axis.text.y = ggplot2::element_blank(),
       axis.title.y = ggplot2::element_blank(),
@@ -121,7 +121,7 @@ plot_gauge <- function(x, digits = 2) {
 #' overlaid as a diamond: a diamond lying inside the cloud of negative
 #' controls is the visual signature of a bias-dominated association.
 #'
-#' @param x An object of class `ber` or `biasratio`.
+#' @param x An object of class `baf` or `bafratio`.
 #' @param labelAll Logical. Label every negative control (`TRUE`) or only
 #'   potential outliers with |standardized residual| > 1.5 (`FALSE`,
 #'   default when more than 20 controls).
@@ -129,7 +129,7 @@ plot_gauge <- function(x, digits = 2) {
 #' @return A `ggplot` object.
 #' @export
 #' @examples
-#' fit <- ber_estimate(sim_est$logRr, sim_est$seLogRr,
+#' fit <- baf_estimate(sim_est$logRr, sim_est$seLogRr,
 #'                     sim_nc$logRr, sim_nc$seLogRr, ncNames = sim_nc$outcome)
 #' plot_null(fit)
 plot_null <- function(x, labelAll = NULL) {
@@ -152,7 +152,7 @@ plot_null <- function(x, labelAll = NULL) {
     ymin = mu - 1.96 * sqrt(seGrid^2 + sigma^2),
     ymax = mu + 1.96 * sqrt(seGrid^2 + sigma^2)
   )
-  biasCol <- ber_pal()[["bias-dominated"]]
+  biasCol <- baf_pal()[["bias-dominated"]]
 
   ggplot2::ggplot() +
     ggplot2::geom_ribbon(
@@ -193,7 +193,7 @@ plot_null <- function(x, labelAll = NULL) {
       x = "Standard error of log RR",
       y = "Log relative risk"
     ) +
-    theme_biasratio()
+    theme_bafratio()
 }
 
 #' Effect estimate before vs after empirical calibration
@@ -202,19 +202,19 @@ plot_null <- function(x, labelAll = NULL) {
 #' risks with their confidence intervals. The calibrated CI is wider because
 #' it incorporates the systematic error variance.
 #'
-#' @param x An object of class `ber` or `biasratio`.
+#' @param x An object of class `baf` or `bafratio`.
 #' @param level Confidence level for the displayed intervals.
 #'
 #' @return A `ggplot` object.
 #' @export
 #' @examples
-#' fit <- ber_estimate(sim_est$logRr, sim_est$seLogRr,
+#' fit <- baf_estimate(sim_est$logRr, sim_est$seLogRr,
 #'                     sim_nc$logRr, sim_nc$seLogRr)
 #' plot_calibration(fit)
 plot_calibration <- function(x, level = 0.95) {
   est <- asBerObject(x)
   z <- stats::qnorm(1 - (1 - level) / 2)
-  cls <- if (inherits(x, "biasratio")) x$classification else est$classification
+  cls <- if (inherits(x, "bafratio")) x$classification else est$classification
 
   what <- factor(
     c(
@@ -264,22 +264,22 @@ plot_calibration <- function(x, level = 0.95) {
       x = "Relative risk (log scale)", y = NULL,
       caption = "Dashed line: no effect (RR = 1)"
     ) +
-    theme_biasratio()
+    theme_bafratio()
 }
 
 #' Q-Q plot of standardized negative control residuals
 #'
-#' @param x An object of class `ber_diag` or `biasratio`.
+#' @param x An object of class `baf_diag` or `bafratio`.
 #'
 #' @return A `ggplot` object.
 #' @export
 #' @examples
-#' d <- ber_diagnostics(sim_nc$logRr, sim_nc$seLogRr, ncNames = sim_nc$outcome)
+#' d <- baf_diagnostics(sim_nc$logRr, sim_nc$seLogRr, ncNames = sim_nc$outcome)
 #' plot_qq(d)
 plot_qq <- function(x) {
-  diagObj <- if (inherits(x, "biasratio")) x$diagnostics else x
-  if (!inherits(diagObj, "ber_diag")) {
-    stop("`x` must be an object of class `ber_diag` or `biasratio`.", call. = FALSE)
+  diagObj <- if (inherits(x, "bafratio")) x$diagnostics else x
+  if (!inherits(diagObj, "baf_diag")) {
+    stop("`x` must be an object of class `baf_diag` or `bafratio`.", call. = FALSE)
   }
   qqDf <- diagObj$qq
   # 按标准化残差找回名字用于离群点标注
@@ -298,12 +298,12 @@ plot_qq <- function(x) {
       x = "Theoretical normal quantiles",
       y = "Sample quantiles"
     ) +
-    theme_biasratio()
+    theme_bafratio()
   if (nrow(outDf) > 0) {
     p <- p + ggplot2::geom_text(
       data = outDf,
       ggplot2::aes(label = .data$name),
-      nudge_y = 0.12, size = 3, color = ber_pal()[["bias-dominated"]],
+      nudge_y = 0.12, size = 3, color = baf_pal()[["bias-dominated"]],
       check_overlap = TRUE
     )
   }
@@ -312,25 +312,25 @@ plot_qq <- function(x) {
 
 #' Forest plot of leave-one-out BER sensitivity
 #'
-#' @param x An object of class `ber_loo`, or a `biasratio` object created
+#' @param x An object of class `baf_loo`, or a `bafratio` object created
 #'   with `loo = TRUE`.
 #'
 #' @return A `ggplot` object.
 #' @export
 #' @examples
-#' loo <- ber_loo(sim_est$logRr, sim_est$seLogRr,
+#' loo <- baf_loo(sim_est$logRr, sim_est$seLogRr,
 #'                sim_nc$logRr, sim_nc$seLogRr,
 #'                ncNames = sim_nc$outcome, nBoot = 100, seed = 1)
 #' plot_loo(loo)
 plot_loo <- function(x) {
-  looDf <- if (inherits(x, "biasratio")) x$loo else x
-  if (is.null(looDf) || !inherits(looDf, "ber_loo")) {
-    stop("`x` must be a `ber_loo` data frame or a `biasratio` object with `loo = TRUE`.",
+  looDf <- if (inherits(x, "bafratio")) x$loo else x
+  if (is.null(looDf) || !inherits(looDf, "baf_loo")) {
+    stop("`x` must be a `baf_loo` data frame or a `bafratio` object with `loo = TRUE`.",
          call. = FALSE)
   }
   looDf$excluded <- stats::reorder(looDf$excluded, looDf$ber)
   hasCi <- any(!is.na(looDf$ci_lo))
-  pal <- ber_pal()
+  pal <- baf_pal()
 
   p <- ggplot2::ggplot(looDf, ggplot2::aes(y = .data$excluded, x = .data$ber)) +
     ggplot2::geom_vline(xintercept = 1, linetype = "dashed", color = "grey55") +
@@ -344,7 +344,7 @@ plot_loo <- function(x) {
       y = "Excluded negative control",
       caption = "Dashed line: BER = 1 (bias equals calibrated signal)"
     ) +
-    theme_biasratio()
+    theme_bafratio()
   if (hasCi) {
     p <- p + ggplot2::geom_errorbar(
       ggplot2::aes(xmin = .data$ci_lo, xmax = .data$ci_hi,
@@ -357,19 +357,19 @@ plot_loo <- function(x) {
 
 #' Bootstrap distribution of the BER
 #'
-#' @param x An object of class `ber_boot` or `biasratio`.
+#' @param x An object of class `baf_boot` or `bafratio`.
 #' @param bins Number of histogram bins.
 #'
 #' @return A `ggplot` object.
 #' @export
 #' @examples
-#' boot <- ber_bootstrap(sim_est$logRr, sim_est$seLogRr,
+#' boot <- baf_bootstrap(sim_est$logRr, sim_est$seLogRr,
 #'                       sim_nc$logRr, sim_nc$seLogRr, nBoot = 500, seed = 42)
 #' plot_boot(boot)
 plot_boot <- function(x, bins = 40) {
-  boot <- if (inherits(x, "biasratio")) x$bootstrap else x
-  if (!inherits(boot, "ber_boot")) {
-    stop("`x` must be an object of class `ber_boot` or `biasratio`.", call. = FALSE)
+  boot <- if (inherits(x, "bafratio")) x$bootstrap else x
+  if (!inherits(boot, "baf_boot")) {
+    stop("`x` must be an object of class `baf_boot` or `bafratio`.", call. = FALSE)
   }
   valid <- boot$boot_dist[!is.na(boot$boot_dist)]
   histDf <- data.frame(logBer = log10(valid))
@@ -395,5 +395,5 @@ plot_boot <- function(x, bins = 40) {
       x = "BER (log10 axis, labels on ratio scale)",
       y = "Count"
     ) +
-    theme_biasratio()
+    theme_bafratio()
 }

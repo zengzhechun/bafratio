@@ -1,4 +1,4 @@
 library(testthat)
-library(biasratio)
+library(bafratio)
 
-test_check("biasratio")
+test_check("bafratio")

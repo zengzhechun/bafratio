@@ -1,11 +1,11 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# biasratio
+# bafratio
 
 <!-- badges: start -->
 
-[![R-CMD-check](https://github.com/zengzhechun/biasratio/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/zengzhechun/biasratio/actions/workflows/R-CMD-check.yaml)
+[![R-CMD-check](https://github.com/zengzhechun/bafratio/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/zengzhechun/bafratio/actions/workflows/R-CMD-check.yaml)
 [![License:
 MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 <!-- badges: end -->
@@ -20,7 +20,7 @@ p-value is a binary verdict: it mixes the *size* of the bias with the
 *precision* of the estimate, and it says nothing about the magnitude of
 bias relative to the effect that survives calibration.
 
-`biasratio` separates the two with a pair of equivalent metrics. The
+`bafratio` separates the two with a pair of equivalent metrics. The
 primary metric is the **bias attribution fraction (BAF)**, the share of the total
 calibrated signal attributable to systematic bias, on a bounded 0-1
 scale:
@@ -39,7 +39,7 @@ as an unbounded ratio: $\mathrm{BER} = \mathrm{BAF} / (1 - \mathrm{BAF})$.
 - **BAF \< 1/3** (BER \< 0.5) — the calibrated signal clearly exceeds the
   bias (*effect-dominated*). The association survives the bias audit.
 
-`biasratio` computes BAF and BER with logit-scale (equivalently
+`bafratio` computes BAF and BER with logit-scale (equivalently
 log-scale) bootstrap confidence intervals, bootstrap-median point
 estimates that cannot fall outside their own CI, a Fieller confidence
 set for the underlying ratio, three-zone classification, leave-one-out
@@ -51,7 +51,7 @@ sensitivity analysis over the negative controls, and publication-ready
 ``` r
 # From GitHub (development version)
 # install.packages("remotes")
-remotes::install_github("zengzhechun/biasratio")
+remotes::install_github("zengzhechun/bafratio")
 ```
 
 ## Quick start
@@ -62,9 +62,9 @@ protect against an outcome (RR = 0.83) purely because of systematic
 error. No real patient data are involved.
 
 ``` r
-library(biasratio)
+library(bafratio)
 
-fit <- ber_analyze(
+fit <- baf_analyze(
   logRr    = sim_est$logRr,   # primary estimate: log RR = -0.184 (RR = 0.83)
   seLogRr  = sim_est$seLogRr,
   ncLogRr  = sim_nc$logRr,    # 12 negative control outcomes
@@ -75,7 +75,7 @@ fit <- ber_analyze(
 )
 
 fit
-#> biasratio: full BER analysis
+#> bafratio: full BER analysis
 #> ========================================================
 #> Empirical null:  mu_B = -0.208, sigma_B = 0.027  (K = 12 negative controls)
 #> BAF  = 0.879  |  BER = 7.27
@@ -88,7 +88,7 @@ fit
 ```
 
 ``` r
-plot_bf_gauge(fit)
+plot_baf_gauge(fit)
 ```
 
 <img src="man/figures/README-gauge-1.png" alt="" width="80%" />
@@ -125,15 +125,15 @@ plot_loo(fit$loo)
 
 The full workflow above tells you *how big* the bias is. When you must
 decide, for many exposure-outcome pairs at once, whether each estimate
-can serve as usable **effect evidence**, use `ber_screen()` (or its
+can serve as usable **effect evidence**, use `baf_screen()` (or its
 BER-scale alias `bf_screen()`). It applies a two-layer rule:
 
 1.  **Layer 1 (signal existence).** The calibrated p-value must be below
     `cal_p_threshold` (default 0.05). Otherwise the verdict is
     `"insufficient-evidence"` and Layer 2 is not entered.
 2.  **Layer 2 (bias share).** Conditional on a real signal,
-    `ber_screen()` looks up, in the reference simulation calibration
-    `bf_reliability`, the probability `P(bias-dominated)` that the
+    `baf_screen()` looks up, in the reference simulation calibration
+    `baf_reliability`, the probability `P(bias-dominated)` that the
     *true* regime is bias-dominated, given the BAF point estimate and the
     *width* of its 95% CI (a wide CI means the BAF is poorly pinned down,
     so the conservative maximum of the narrow-CI and wide-CI
@@ -144,7 +144,7 @@ BER-scale alias `bf_screen()`). It applies a two-layer rule:
     justification.
 
 ``` r
-sc <- ber_screen(
+sc <- baf_screen(
   logRr     = sim_est$logRr,
   seLogRr   = sim_est$seLogRr,
   ncLogRr   = sim_nc$logRr,
@@ -152,7 +152,7 @@ sc <- ber_screen(
   nBoot = 500, seed = 42
 )
 sc
-#> biasratio two-layer screening
+#> bafratio two-layer screening
 #> ========================================================
 #> Layer 1  calibrated p = 0.649  (threshold 0.05)  ->  NO signal
 #> --------------------------------------------------------
@@ -168,11 +168,11 @@ plot(sc)            # BAF gauge annotated with the screening verdict
 <img src="man/figures/README-screen-1.png" alt="" width="80%" />
 
 The empirical null and the BAF 95% CI come from the same fit as
-`ber_analyze()`; `ber_screen()` merely adds the Layer-1/Layer-2 decision
-and the reliability lookup. For a single pair you can pass a `biasratio`
-object directly (`ber_screen(fit)`), skipping the recomputation. The
-`bf_reliability` table (12 BAF bins, 960,000 simulated repetitions) is
-shipped with the package and is the only data `ber_screen()` needs
+`baf_analyze()`; `baf_screen()` merely adds the Layer-1/Layer-2 decision
+and the reliability lookup. For a single pair you can pass a `bafratio`
+object directly (`baf_screen(fit)`), skipping the recomputation. The
+`baf_reliability` table (12 BAF bins, 960,000 simulated repetitions) is
+shipped with the package and is the only data `baf_screen()` needs
 beyond the fit.
 
 ## What the metrics mean, in plain terms
@@ -192,18 +192,18 @@ surviving signal is bias?* Neither is a substitute for the other.
 
 | Function | Purpose |
 |----|----|
-| `ber_estimate()` | fit the empirical null; BAF and BER point estimates, calibrated RR and p |
-| `ber_bootstrap()` | bootstrap CIs (log/logit scale) + bootstrap-median point estimates |
-| `ber_classify()`, `bf_classify()` | three-zone classification (ratio / fraction scale) |
-| `bf_fieller()` | Fieller confidence set for the ratio $\mu_B / \tilde\psi$ |
-| `ber_loo()` | leave-one-out sensitivity over the negative controls |
-| `ber_diagnostics()` | standardized residuals, Shapiro-Wilk, Q-Q data |
-| `ber_analyze()` | the whole workflow in one call |
-| `ber_screen()`, `bf_screen()` | two-layer screening (signal-existence + bias-share) into an effect-evidence verdict |
-| `bf_rules()` | evaluate the companion paper's reporting rules `R0`-`R4`, `C1`, `C2` from a BAF, its interval and the calibrated p |
-| `explain()` | plain-English justification of a `ber_screen` verdict |
-| `bf_reliability` | shipped reference calibration table (12 bins, 960,000 reps) used by Layer 2 |
-| `plot_bf_gauge()`, `plot_gauge()`, `plot_null()`, `plot_calibration()`, `plot_qq()`, `plot_loo()`, `plot_boot()` | visualizations |
+| `baf_estimate()` | fit the empirical null; BAF and BER point estimates, calibrated RR and p |
+| `baf_bootstrap()` | bootstrap CIs (log/logit scale) + bootstrap-median point estimates |
+| `ber_classify()`, `baf_classify()` | three-zone classification (ratio / fraction scale) |
+| `baf_fieller()` | Fieller confidence set for the ratio $\mu_B / \tilde\psi$ |
+| `baf_loo()` | leave-one-out sensitivity over the negative controls |
+| `baf_diagnostics()` | standardized residuals, Shapiro-Wilk, Q-Q data |
+| `baf_analyze()` | the whole workflow in one call |
+| `baf_screen()`, `bf_screen()` | two-layer screening (signal-existence + bias-share) into an effect-evidence verdict |
+| `baf_rules()` | evaluate the companion paper's reporting rules `R0`-`R4`, `C1`, `C2` from a BAF, its interval and the calibrated p |
+| `explain()` | plain-English justification of a `baf_screen` verdict |
+| `baf_reliability` | shipped reference calibration table (12 bins, 960,000 reps) used by Layer 2 |
+| `plot_baf_gauge()`, `plot_gauge()`, `plot_null()`, `plot_calibration()`, `plot_qq()`, `plot_loo()`, `plot_boot()` | visualizations |
 
 ## Background and assumptions
 

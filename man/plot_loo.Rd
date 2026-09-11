@@ -7,7 +7,7 @@
 plot_loo(x)
 }
 \arguments{
-\item{x}{An object of class \code{ber_loo}, or a \code{biasratio} object created
+\item{x}{An object of class \code{baf_loo}, or a \code{bafratio} object created
 with \code{loo = TRUE}.}
 }
 \value{
@@ -17,7 +17,7 @@ A \code{ggplot} object.
 Forest plot of leave-one-out BER sensitivity
 }
 \examples{
-loo <- ber_loo(sim_est$logRr, sim_est$seLogRr,
+loo <- baf_loo(sim_est$logRr, sim_est$seLogRr,
                sim_nc$logRr, sim_nc$seLogRr,
                ncNames = sim_nc$outcome, nBoot = 100, seed = 1)
 plot_loo(loo)

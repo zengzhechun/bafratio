@@ -19,3 +19,11 @@ check_tmp/
 check_tmp.log
 Review_*.md
 *.Rcheck/
+
+# build products
+*.tar.gz
+
+# demo render intermediates
+*.knit.md
+*.rmarkdown
+*_files/

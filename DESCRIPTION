@@ -1,6 +1,6 @@
-Package: biasratio
+Package: bafratio
 Title: Bias Attribution Fraction and Bias-Effect Ratio: Quantifying Residual Systematic Bias in Observational Studies
-Version: 0.3.1
+Version: 0.4.0
 Authors@R: c(
     person("Zhechun", "Zeng", , "zengzhechun@users.noreply.github.com", role = c("aut", "cre"))
   )
@@ -32,8 +32,8 @@ Suggests:
     withr
 VignetteBuilder: knitr
 Config/testthat/edition: 3
-URL: https://github.com/zengzhechun/biasratio
-BugReports: https://github.com/zengzhechun/biasratio/issues
+URL: https://github.com/zengzhechun/bafratio
+BugReports: https://github.com/zengzhechun/bafratio/issues
 Language: en-US
 RoxygenNote: 8.0.0
 Depends: 
