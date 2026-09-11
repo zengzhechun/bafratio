@@ -297,20 +297,51 @@ summary(sc2)
 plot(sc2)
 ```
 
+# 第九步：报告规则表 `baf_rules()`
+
+`baf_classify()` 回答的是"这条估计落在三个区的哪一个"；论文 Table 2 评估的七条报告规则回答的是另一个问题："点估计，或整个区间，是否清楚离开了偏倚主导阈值 0.5"。两者在 BAF = 0.45、区间 [0.30, 0.48] 这类情形下会给出不同答案，所以规则单独由 `baf_rules()` 给出，不并入三区分类。
+
+七条规则为：R0 只看未校准 p 值；R1 只看校准 p 值；R2 在 R1 之上再要求 BAF 点估计低于阈值；R3 在 R1 之上改要求整个区间的上界不高于阈值；R4 在 R1 之上改用 P(bias-dominated) 低于 0.15；C1、C2 是不看第一层的两个独立比较项，分别对应 R2、R3 的阈值判据。某个输入没给时，依赖它的规则返回 `NA` 而不是 `FALSE`，以免把"没算"误读成"不通过"。
+
+```{r baf-rules}
+rules1 <- baf_rules(
+  baf        = boot1$baf_median,
+  ciLo       = boot1$baf_ci_lo,
+  ciHi       = boot1$baf_ci_hi,
+  cal_p      = est1$cal_p,
+  p_bias_dom = sc1$layer2$p_bias_dom,
+  uncal_p    = est1$p_uncal
+)
+knitr::kable(rules1, row.names = FALSE,
+             caption = "策略 A 在七条报告规则下的判定")
+```
+
+**解读。** 策略 A 的未校准 p 值为 `r format.pval(est1$p_uncal, digits = 3)`，R0 因此通过，这正是未校准分析会误判的由来。校准 p 值 `r round(est1$cal_p, 3)` 高于 0.05，第一层不通过，依赖它的 R1 至 R4 全部不通过。C1、C2 不看第一层，只比较 BAF 与阈值；本例 BAF 点估计 `r round(boot1$baf_median, 3)` 与区间上界 `r round(boot1$baf_ci_hi, 3)` 都远高于 0.5，故同为不通过。
+
+R2 用严格小于、R3 用非严格小于，这是论文里刻意保留的不对称：BAF 恰好等于 0.5 时 R2 不通过而 R3 通过。
+
+```{r baf-rules-edge}
+knitr::kable(
+  baf_rules(0.50, ciLo = 0.40, ciHi = 0.50, cal_p = 0.01),
+  row.names = FALSE,
+  caption = "BAF 点估计恰在阈值 0.5 上：R3 通过、R2 不通过"
+)
+```
+
 # 可视化函数总览
 
-前面已在各步骤穿插展示了全部绘图函数，这里汇总其用途：
+前面已在各步骤穿插展示了全部 8 个绘图函数，无一遗漏；下表汇总其用途与演示位置：
 
-| 函数 | 输入对象 | 用途 |
-|---|---|---|
-| `plot_baf_gauge()` | `bafratio` | BAF 仪表（0-1 有界，不会被宽 CI 拉伸） |
-| `plot_gauge()` | `bafratio` | BER 比值尺度仪表（偏好比值尺度的读者） |
-| `plot_null()` | `ber` | 零假设图：主估计 vs 阴性对照云团 |
-| `plot_calibration()` | `ber` | 经验零假设密度与对照位置 |
-| `plot_qq()` | `baf_diag` | 标准化残差 Q-Q 图 |
-| `plot_loo()` | `baf_loo` | 留一法 BAF 轨迹 |
-| `plot_boot()` | `baf_boot` | BAF 自助分布直方图 |
-| `plot()` / `plot.baf_screen` | `baf_screen` | 带筛查判定的 BAF 仪表 |
+| 函数 | 输入对象 | 用途 | 演示位置 |
+|---|---|---|---|
+| `plot_baf_gauge()` | `bafratio` | BAF 仪表（0-1 有界，不会被宽 CI 拉伸） | 本节 `plot-gauges` |
+| `plot_gauge()` | `bafratio` | BER 比值尺度仪表（偏好比值尺度的读者） | 本节 `plot-gauges` |
+| `plot_null()` | `ber` | 零假设图：主估计 vs 阴性对照云团 | 第七步 `plot-null` |
+| `plot_calibration()` | `ber` | 经验零假设密度与对照位置 | 第七步 `plot-calibration` |
+| `plot_qq()` | `baf_diag` | 标准化残差 Q-Q 图 | 第六步 `plot-qq` |
+| `plot_loo()` | `baf_loo` | 留一法 BAF 轨迹 | 第五步 `plot-loo` |
+| `plot_boot()` | `baf_boot` | BAF 自助分布直方图 | 第二步 `plot-boot` |
+| `plot()` / `plot.baf_screen` | `baf_screen` | 带筛查判定的 BAF 仪表 | 第八步 `plot-screen` |
 
 下面补上 BAF 与 BER 两张仪表（基于 `fit1`），直观对比两种尺度：
 
@@ -371,16 +402,60 @@ knitr::kable(head(baf_reliability, 6), digits = 4,
 | `bsr_classify` | `ber_classify`（该函数接收 BER 尺度输入，本身未改名） |
 
 ```{r deprecated-alias}
-# 旧名照常可用，此处屏蔽弃用警告以保持输出整洁
-bsr_baf <- suppressWarnings(bsr_estimate(
-  logRr     = t1_logRr,
-  seLogRr   = t1_se,
-  ncLogRr   = nc_logRr,
-  ncSeLogRr = nc_seLogRr,
-  ncNames   = nc_names
-)$baf)
-cat("bsr_estimate 的 BAF =", round(bsr_baf, 3),
-    "（与 baf_estimate 的", round(est1$baf, 3), "一致）\n")
+# 19 个旧名逐一实际调用：每个都应发出一次弃用警告，且能正常返回
+old_calls <- list(
+  ber_estimate    = quote(ber_estimate(t1_logRr, t1_se, nc_logRr, nc_seLogRr)),
+  bsr_estimate    = quote(bsr_estimate(t1_logRr, t1_se, nc_logRr, nc_seLogRr)),
+  ber_bootstrap   = quote(ber_bootstrap(t1_logRr, t1_se, nc_logRr, nc_seLogRr, nBoot = 200, seed = 1)),
+  bsr_bootstrap   = quote(bsr_bootstrap(t1_logRr, t1_se, nc_logRr, nc_seLogRr, nBoot = 200, seed = 1)),
+  ber_analyze     = quote(ber_analyze(t1_logRr, t1_se, nc_logRr, nc_seLogRr, nBoot = 200, seed = 1)),
+  bsr_analyze     = quote(bsr_analyze(t1_logRr, t1_se, nc_logRr, nc_seLogRr, nBoot = 200, seed = 1)),
+  ber_screen      = quote(ber_screen(t1_logRr, t1_se, nc_logRr, nc_seLogRr, nBoot = 200, seed = 1)),
+  bf_screen       = quote(bf_screen(t1_logRr, t1_se, nc_logRr, nc_seLogRr, nBoot = 200, seed = 1)),
+  ber_loo         = quote(ber_loo(t1_logRr, t1_se, nc_logRr, nc_seLogRr, nBoot = 0)),
+  bsr_loo         = quote(bsr_loo(t1_logRr, t1_se, nc_logRr, nc_seLogRr, nBoot = 0)),
+  ber_diagnostics = quote(ber_diagnostics(ncLogRr = nc_logRr, ncSeLogRr = nc_seLogRr, ncNames = nc_names)),
+  bsr_diagnostics = quote(bsr_diagnostics(ncLogRr = nc_logRr, ncSeLogRr = nc_seLogRr, ncNames = nc_names)),
+  ber_pal         = quote(ber_pal()),
+  bf_classify     = quote(bf_classify(boot1$baf_median, boot1$baf_ci_lo, boot1$baf_ci_hi)),
+  bsr_classify    = quote(bsr_classify(est1$ber, boot1$ci_lo, boot1$ci_hi)),
+  bf_rules        = quote(bf_rules(boot1$baf_median, ciLo = boot1$baf_ci_lo,
+                                   ciHi = boot1$baf_ci_hi, cal_p = est1$cal_p)),
+  bf_fieller      = quote(bf_fieller(est1, boot1)),
+  plot_bf_gauge   = quote(plot_bf_gauge(fit1)),
+  theme_biasratio = quote(theme_biasratio())
+)
+
+old_new <- c(
+  ber_estimate = "baf_estimate",       bsr_estimate = "baf_estimate",
+  ber_bootstrap = "baf_bootstrap",     bsr_bootstrap = "baf_bootstrap",
+  ber_analyze = "baf_analyze",         bsr_analyze = "baf_analyze",
+  ber_screen = "baf_screen",           bf_screen = "baf_screen",
+  ber_loo = "baf_loo",                 bsr_loo = "baf_loo",
+  ber_diagnostics = "baf_diagnostics", bsr_diagnostics = "baf_diagnostics",
+  ber_pal = "baf_pal",
+  bf_classify = "baf_classify",        bsr_classify = "ber_classify",
+  bf_rules = "baf_rules",              bf_fieller = "baf_fieller",
+  plot_bf_gauge = "plot_baf_gauge",    theme_biasratio = "theme_bafratio"
+)
+
+# 调用表达式并记录是否发出弃用警告；绘图返回值不打印，避免多出重复图
+probe <- function(e) {
+  warned <- FALSE
+  withCallingHandlers(
+    tryCatch(invisible(eval(e)), error = function(err) NULL),
+    warning = function(w) { warned <<- TRUE; invokeRestart("muffleWarning") }
+  )
+  warned
+}
+
+res <- vapply(old_calls, probe, logical(1))
+knitr::kable(
+  data.frame(旧名 = names(res), 新名 = unname(old_new[names(res)]),
+             已发出弃用警告 = unname(res)),
+  row.names = FALSE,
+  caption = "19 个旧名逐一实际调用：全部发出弃用警告并可正常返回"
+)
 ```
 
 # 综合解读与建议
