@@ -28,7 +28,7 @@ test_that("verdict bands map P(bias-dominated) correctly", {
 })
 
 test_that("effect-dominated scenario yields effect-evidence", {
-  # Tiny bias (NCs ~ 0) and a large calibrated effect -> low BF -> effect-evidence
+  # Tiny bias (NCs ~ 0) and a large calibrated effect -> low BAF -> effect-evidence
   ncLog <- c(0.001, -0.001, 0.002, -0.002, 0.000)
   ncSe <- rep(0.05, 5)
   sc <- ber_screen(-0.60, 0.02, ncLog, ncSe, nBoot = 200, seed = 5)
@@ -73,7 +73,7 @@ test_that("summary.ber_screen returns a one-row data frame", {
 })
 
 test_that("CI truncation at 0/1 is flagged as clipped", {
-  # A BF very near 1 (calibrated effect ~ 0) forces bf_ci_hi to 1 -> clipped.
+  # A BAF very near 1 (calibrated effect ~ 0) forces bf_ci_hi to 1 -> clipped.
   ncLog <- c(-0.30, -0.28, -0.31, -0.29, -0.27)
   ncSe <- c(0.02, 0.02, 0.02, 0.02, 0.02)
   sc <- ber_screen(-0.001, 0.01, ncLog, ncSe, nBoot = 200, seed = 11)

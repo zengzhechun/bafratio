@@ -42,28 +42,38 @@
 
 #' Reference calibration table for the two-layer screening
 #'
-#' Bias-dominated probability by bias-fraction (BF) bin, estimated from the
-#' 960-condition BF estimator simulation study (manuscript v38: five-factor
+#' Bias-dominated probability by bias-fraction (BAF) bin, estimated from the
+#' 960-condition BAF estimator simulation study (manuscript v38: five-factor
 #' full factorial design). Used by [ber_screen()] / [bf_screen()] for Layer 2.
 #'
-#' A bootstrap CI that is *narrow* (half-width <= `med_ci_width`) pins the BF
+#' A bootstrap CI that is *narrow* (half-width <= `med_ci_width`) pins the BAF
 #' down well, so the true regime is less often bias-dominated than when the CI
 #' is *wide*. The screening therefore reads both columns and reports the
 #' conservative maximum. The caller never needs to know which column applied.
 #'
+#' **Interval coverage caveat.** The interval reported for the BAF is an
+#' approximate (bootstrap / posterior) interval, and its empirical coverage in
+#' the reference simulation is well below the nominal 95%: 71.1% overall,
+#' 58.5% for narrow intervals and 83.8% for wide ones (companion manuscript,
+#' v39). Screening decisions therefore carry more uncertainty than a nominal
+#' 95% interval suggests. Treat the interval as a ranking device rather than as
+#' a calibrated coverage statement, and prefer larger negative-control sets
+#' where feasible.
+#'
 #' @format A data frame with 12 rows and 3 columns:
 #' \describe{
-#'   \item{bf_center}{BF bin center (share of the calibrated signal that is systematic bias).}
+#'   \item{bf_center}{BAF bin center (share of the calibrated signal that is systematic bias).}
 #'   \item{p_bias_dom_narrow}{P(true regime is bias-dominated) given a narrow bootstrap CI.}
 #'   \item{p_bias_dom_wide}{P(true regime is bias-dominated) given a wide bootstrap CI.}
 #' }
 #'
-#' Attributes: `med_ci_width` (0.130, the median bootstrap-CI half-width across
+#' Attributes: `med_ci_width` (0.1298899, the median bootstrap-CI half-width across
 #' the simulation; the narrow/wide cut point) and `source` (provenance).
 #'
-#' @source BF estimator simulation, manuscript v37 (640 conditions). Bundled as
-#'   the default reference calibration; override via the `reliability` argument
-#'   of [ber_screen()] for other simulation designs.
+#' @source BAF estimator simulation, manuscript v38 (five-factor full
+#'   factorial, 960 conditions x 1000 replicates). Bundled as the default
+#'   reference calibration; override via the `reliability` argument of
+#'   [ber_screen()] for other simulation designs.
 #'
 #' @examples
 #' data(bf_reliability)

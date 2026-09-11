@@ -1,22 +1,23 @@
 # Two-layer screening: decide whether an observational effect estimate can
 # serve as effect evidence.
 #
-# Design (from the manuscript v37 discussion, 2026-08-26):
+# Design originated in the manuscript v37 discussion (2026-08-26); the data
+# provenance is the v38 simulation study, see `bf_reliability`.
 #   Layer 1 -- Signal existence. A calibrated p-value (OHDSI empirical
 #     calibration) answers "is there a signal distinct from chance?". Below
 #     `cal_p_threshold` (default 0.05) a real signal is established; otherwise
 #     the result cannot yet be used as effect evidence.
-#   Layer 2 -- Bias share. Conditional on a real signal, the bias fraction
-#     BF in [0,1] and its 95% CI quantify how much of the calibrated signal is
+#   Layer 2 -- Bias share. Conditional on a real signal, the bias attribution fraction
+#     BAF in [0,1] and its 95% CI quantify how much of the calibrated signal is
 #     systematic bias. The bootstrap-CI *width* is itself informative: a wide
-#     CI means the true BF is poorly pinned down, so the probability that the
+#     CI means the true BAF is poorly pinned down, so the probability that the
 #     true regime is bias-dominated is higher. We therefore look up, from the
 #     reference simulation calibration `bf_reliability`, both the narrow-CI and
 #     wide-CI conditional probabilities and report the conservative max. The
 #     verdict bands turn that probability into an actionable recommendation.
 #
 # The narrow/wide split is an INTERNAL algorithm detail: the caller only
-# supplies BF and its 95% CI, and the reported P(bias-dominated) is already the
+# supplies BAF and its 95% CI, and the reported P(bias-dominated) is already the
 # conservative (max) value, so the clinician never needs to know which column
 # applied. This mirrors the clinical algorithm document, where the narrow/wide
 # distinction is hidden inside the procedure.
@@ -31,10 +32,10 @@
 #'    calibrated p at or above the threshold means no signal distinct from
 #'    chance is established, so the bias screening in Layer 2 is not entered
 #'    and the verdict is `"insufficient-evidence"`.
-#' 2. **Layer 2 (bias share).** Conditional on a real signal, the bias fraction
-#'    `BF` and its 95% CI are used to look up, in the reference simulation
+#' 2. **Layer 2 (bias share).** Conditional on a real signal, the bias attribution fraction
+#'    `BAF` and its 95% CI are used to look up, in the reference simulation
 #'    calibration [bf_reliability], the probability that the *true* regime is
-#'    bias-dominated. Because a wide CI implies a poorly pinned-down BF, both
+#'    bias-dominated. Because a wide CI implies a poorly pinned-down BAF, both
 #'    the narrow-CI and wide-CI conditional probabilities are read and the
 #'    conservative maximum is reported as `P(bias-dominated)`. The verdict then
 #'    follows fixed bands:
@@ -43,8 +44,19 @@
 #'
 #' The function returns a `ber_screen` object whose `print`/`summary` show the
 #' numeric decision and whose `explain()` method returns a plain-English
-#' interpretation. When the BF 95% CI is truncated at the 0 or 1 boundary, the
+#' interpretation. When the BAF 95% CI is truncated at the 0 or 1 boundary, the
 #' usable one-sided half-interval is used for the width classification.
+#'
+#' **Interval coverage caveat.** The `BAF` interval underlying both layers is
+#' an approximate (bootstrap / posterior) interval whose empirical coverage in
+#' the reference simulation is below the nominal 95% (71.1% overall, 58.5%
+#' narrow, 83.8% wide; companion manuscript, v39). The verdict bands therefore
+#' carry more uncertainty than a nominal 95% interval implies. See the
+#' [bf_reliability] reference table this screening reads.
+#'
+#' The two-layer screen implements rules `R1` and `R4` of the companion
+#' manuscript's rule table. The remaining rules, including the interval-based
+#' `R3`/`C2`, are available from [bf_rules()].
 #'
 #' @param logRr Either a `biasratio` object (from [ber_analyze()], which
 #'   already contains the estimate and bootstrap) or, in the default method,
@@ -57,11 +69,11 @@
 #' @param ncSeLogRr Numeric vector. Standard errors of `ncLogRr` (default
 #'   method).
 #' @param ncNames Optional character vector of negative-control labels.
-#' @param nBoot Bootstrap replicates for the BF 95% CI (default method only;
+#' @param nBoot Bootstrap replicates for the BAF 95% CI (default method only;
 #'   ignored when a `biasratio` object is supplied, since it already has the
 #'   bootstrap).
 #' @param seed Optional random seed for the bootstrap (default method).
-#' @param level Confidence level for the BF CI (default 0.95).
+#' @param level Confidence level for the BAF CI (default 0.95).
 #' @param method Calibrated p method, `"plugin"` (default) or `"robust"`
 #'   (passed to [ber_estimate()] in the default method).
 #' @param reliability Reference calibration table (default [bf_reliability]).
@@ -85,8 +97,9 @@
 #'   }
 #'
 #' @seealso [ber_analyze()] for the full workflow, [ber_classify()] /
-#'   [bf_classify()] for the simpler three-zone (BF-only) classification, and
-#'   [explain()] for the plain-English interpretation.
+#'   [bf_classify()] for the simpler three-zone (BAF-only) classification,
+#'   [bf_rules()] for the full manuscript rule table, and [explain()] for the
+#'   plain-English interpretation.
 #'
 #' @export
 #' @examples
@@ -162,7 +175,7 @@ bf_screen <- function(logRr, ...) ber_screen(logRr, ...)
       code = "effect-evidence",
       label = "EFFECT EVIDENCE",
       explanation = paste0(
-        "The estimated bias fraction is small and the calibrated signal ",
+        "The estimated bias attribution fraction is small and the calibrated signal ",
         "clearly dominates: after accounting for estimation uncertainty, the ",
         "probability that the true regime is bias-dominated is low. The ",
         "result may be reported as effect evidence, while still disclosing ",
@@ -175,7 +188,7 @@ bf_screen <- function(logRr, ...) ber_screen(logRr, ...)
       code = "mixed",
       label = "MIXED / HYPOTHESIS-GENERATING",
       explanation = paste0(
-        "The bias fraction is modest and signal and bias are of comparable ",
+        "The bias attribution fraction is modest and signal and bias are of comparable ",
         "magnitude. Treat the result as hypothesis-generating rather than ",
         "confirmed effect evidence, and seek independent replication before ",
         "any clinical or policy claim."
@@ -187,7 +200,7 @@ bf_screen <- function(logRr, ...) ber_screen(logRr, ...)
       code = "competitive",
       label = "COMPETITIVE / INCONCLUSIVE",
       explanation = paste0(
-        "The bias fraction is high and bias and signal are roughly evenly ",
+        "The bias attribution fraction is high and bias and signal are roughly evenly ",
         "matched. No firm conclusion can be drawn; the result is not suitable ",
         "as effect evidence without additional, independent evidence."
       )
@@ -197,7 +210,7 @@ bf_screen <- function(logRr, ...) ber_screen(logRr, ...)
     code = "not-effect-evidence",
     label = "NOT EFFECT EVIDENCE",
     explanation = paste0(
-      "The estimated bias fraction is large and, after accounting for ",
+      "The estimated bias attribution fraction is large and, after accounting for ",
       "estimation uncertainty, the probability that the true regime is ",
       "bias-dominated is high. The observed association is most likely an ",
       "artifact of residual systematic error and should not be reported as ",
@@ -216,9 +229,12 @@ bf_screen <- function(logRr, ...) ber_screen(logRr, ...)
   bf_hi <- boot$bf_ci_hi
   ci_half <- (bf_hi - bf_lo) / 2
   med_ci_width <- attr(reliability, "med_ci_width", exact = TRUE)
-  if (is.null(med_ci_width) || !is.finite(med_ci_width)) med_ci_width <- 0.133
+  # Fallback equals the bundled reference value; kept in sync with
+  # data-raw/make-reliability.R so a missing attribute cannot silently shift
+  # the narrow/wide cut point.
+  if (is.null(med_ci_width) || !is.finite(med_ci_width)) med_ci_width <- 0.1298899
   ci_class <- if (ci_half <= med_ci_width) "narrow" else "wide"
-  # BF endpoint clipping: when the CI touches 0 or 1 the monotone transform has
+  # BAF endpoint clipping: when the CI touches 0 or 1 the monotone transform has
   # already produced the usable one-sided region, and (hi - lo) / 2 is exactly
   # that usable half-interval.
   clipped <- (bf_lo <= 0) || (bf_hi >= 1)
@@ -273,7 +289,7 @@ bf_screen <- function(logRr, ...) ber_screen(logRr, ...)
   } else ""
   # Layer 2 meaning: given a real signal, how much of it is bias?
   out <- c(out, paste0(
-    "Layer 2, bias share: given a real signal, the bias fraction BF = ",
+    "Layer 2, bias share: given a real signal, the bias attribution fraction BAF = ",
     fmtNum(L2$bf, 2), " with 95% CI [", fmtNum(L2$bf_ci_lo, 2), ", ",
     fmtNum(L2$bf_ci_hi, 2), "] measures the share of the calibrated signal ",
     "that is systematic bias.", clipped_note
@@ -305,7 +321,7 @@ print.ber_screen <- function(x, ...) {
     cat("\n", .screen_explanation(x), "\n", sep = "")
     return(invisible(x))
   }
-  cat(sprintf("Layer 2  BF = %s  [%s, %s]\n",
+  cat(sprintf("Layer 2  BAF = %s  [%s, %s]\n",
               fmtNum(L2$bf, 2), fmtNum(L2$bf_ci_lo, 2), fmtNum(L2$bf_ci_hi, 2)))
   cat(sprintf("         P(bias-dominated, conservative) = %.1f%%\n",
               100 * L2$p_bias_dom))
@@ -364,7 +380,7 @@ explain.ber_screen <- function(object, ...) .screen_explanation(object)
 #'
 #' Draws the [ber_screen()] decision as a two-layer diagram: the top panel
 #' shows Layer 1 (whether the calibrated p-value clears the signal threshold),
-#' the bottom panel shows Layer 2 (the bias fraction BF and its 95% CI on the
+#' the bottom panel shows Layer 2 (the bias attribution fraction BAF and its 95% CI on the
 #' bounded 0-1 scale, colored by the verdict). The conservative
 #' P(bias-dominated) is reported in the subtitle, so the clinician reads the
 #' conclusion directly without interpreting narrow versus wide confidence
@@ -420,7 +436,7 @@ plot.ber_screen <- function(x, ...) {
     ggplot2::annotate("text", x = cal_p_lbl_x, y = 0.585,
                       label = sprintf("calibrated p = %s", fmtP(L1$cal_p)),
                       size = 3.4, fontface = "bold", hjust = 0.5, vjust = 1) +
-    # ---- Layer 2: BF gauge ----
+    # ---- Layer 2: BAF gauge ----
     ggplot2::annotate("rect", xmin = 0, xmax = 1/3, ymin = 0.05, ymax = 0.40,
                       fill = pal["effect-dominated"], alpha = 0.12) +
     ggplot2::annotate("rect", xmin = 1/3, xmax = 0.5, ymin = 0.05, ymax = 0.40,
@@ -439,7 +455,7 @@ plot.ber_screen <- function(x, ...) {
                       y = mid2 - 0.03, yend = mid2 + 0.03, color = vcol, linewidth = 1) +
     ggplot2::annotate("point", x = bf_pt, y = mid2, color = vcol, size = 6) +
     ggplot2::annotate("text", x = bf_lbl_x, y = 0.025,
-                      label = sprintf("BF = %s  [95%% CI %s, %s]",
+                      label = sprintf("BAF = %s  [95%% CI %s, %s]",
                                       fmtNum(L2$bf, 2),
                                       fmtNum(L2$bf_ci_lo, 2),
                                       fmtNum(L2$bf_ci_hi, 2)),
@@ -463,7 +479,7 @@ plot.ber_screen <- function(x, ...) {
       title = "biasratio two-layer screening",
       subtitle = sprintf("Conservative P(bias-dominated) = %.1f%%  ->  %s",
                          100 * L2$p_bias_dom, V$label),
-      x = "bias fraction BF (Layer 2) / calibrated p (Layer 1)", y = NULL,
+      x = "bias attribution fraction BAF (Layer 2) / calibrated p (Layer 1)", y = NULL,
       caption = paste0("Layer 1 asks 'is there a real signal?'. ",
                        "Layer 2 asks 'how much of it is bias?'. ",
                        "Narrow/wide CI is folded into the conservative P.")

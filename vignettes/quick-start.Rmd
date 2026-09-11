@@ -1,8 +1,8 @@
 ---
-title: "Quick start: auditing an effect with the bias fraction"
+title: "Quick start: auditing an effect with the bias attribution fraction"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Quick start: auditing an effect with the bias fraction}
+  %\VignetteIndexEntry{Quick start: auditing an effect with the bias attribution fraction}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -45,18 +45,18 @@ fit
 
 ## Read the result
 
-* **BF = 0.88** — about nine tenths of the calibrated signal is systematic
-  bias. BF > 0.5 means *bias-dominated*: the "effect" is more likely an
+* **BAF = 0.88** — about nine tenths of the calibrated signal is systematic
+  bias. BAF > 0.5 means *bias-dominated*: the "effect" is more likely an
   artifact than a fact.
 * The calibrated RR (= 1.02) and calibrated p (= 0.65) already tell you the
-  naive association vanishes after calibration; BF tells you *how much* of
+  naive association vanishes after calibration; BAF tells you *how much* of
   the surviving signal is bias.
 * The CI-based classification (using the bootstrap interval) agrees:
   *bias-dominated*.
 
 ## Plots
 
-`plot(fit)` defaults to the bounded **BF gauge** (it lives on [0, 1], so a
+`plot(fit)` defaults to the bounded **BAF gauge** (it lives on [0, 1], so a
 wide bootstrap CI can never squeeze the zones):
 
 ```{r gauge, fig.width = 7, fig.height = 2.6}

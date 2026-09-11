@@ -62,7 +62,7 @@ test_that("ber_estimate returns both p-values and defaults to plugin", {
 })
 
 test_that("bf_classify and ber_classify share one kernel (cross-scale equivalence)", {
-  # 点估计模式：BF 与 BER 在各自分区内部（非边界）严格等价。
+  # 点估计模式：BAF 与 BER 在各自分区内部（非边界）严格等价。
   # 边界值（bf=1/3、0.5）由单独的单测覆盖（两者均判 mixed）。
   for (bf in c(0.1, 0.2, 0.4, 0.55, 0.6, 0.8, 0.91, 0.99)) {
     expect_equal(bf_classify(bf), ber_classify(bf / (1 - bf)),
@@ -83,7 +83,7 @@ test_that("bf_classify and ber_classify share one kernel (cross-scale equivalenc
     bf_classify(b, ciLo = cl, ciHi = ch),
     ber_classify(b / (1 - b), ciLo = cl / (1 - cl), ciHi = ch / (1 - ch))
   )
-  # 边界：BF = 1 映射到 BER = Inf，仍判偏倚主导
+  # 边界：BAF = 1 映射到 BER = Inf，仍判偏倚主导
   expect_equal(bf_classify(1), "bias-dominated")
   expect_equal(bf_classify(1), ber_classify(Inf))
 })

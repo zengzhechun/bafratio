@@ -1,8 +1,8 @@
 ---
-title: "Auditing observational effects with the bias fraction"
+title: "Auditing observational effects with the bias attribution fraction"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Auditing observational effects with the bias fraction}
+  %\VignetteIndexEntry{Auditing observational effects with the bias attribution fraction}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -33,26 +33,26 @@ from **negative control outcomes** — outcomes the exposure cannot
 plausibly cause — and re-calibrating the p-value against it. But the
 output is still a p-value: a verdict, not a measurement.
 
-The **bias fraction (BF)** turns the verdict into a quantity. If the
+The **bias attribution fraction (BAF)** turns the verdict into a quantity. If the
 empirical null has mean $\mu_B$ (the systematic bias, on the log-RR scale)
 and the calibrated log effect is
 $\log RR_{\mathrm{cal}} = \log RR_{\mathrm{obs}} - \mu_B$, then
 
 $$
-\mathrm{BF} = \frac{|\mu_B|}{|\mu_B| + |\log RR_{\mathrm{cal}}|}
+\mathrm{BAF} = \frac{|\mu_B|}{|\mu_B| + |\log RR_{\mathrm{cal}}|}
 \in (0, 1]
 $$
 
 reads as *"of the signal that survives calibration, what share is bias?"*.
-BF = 1 means the calibrated effect is exactly zero (signal saturated by
-bias); BF = 0 means no systematic bias was estimated. The auxiliary
+BAF = 1 means the calibrated effect is exactly zero (signal saturated by
+bias); BAF = 0 means no systematic bias was estimated. The auxiliary
 **bias-effect ratio (BER)** is the same information on an unbounded
-scale: $\mathrm{BER} = \mathrm{BF}/(1-\mathrm{BF})$, read as *"the bias
+scale: $\mathrm{BER} = \mathrm{BAF}/(1-\mathrm{BAF})$, read as *"the bias
 is X times as large as the effect that survives calibration"*. The
 estimate is classified into three zones, with identical partitions on both
 scales:
 
-| Zone | BF | BER | Reading |
+| Zone | BAF | BER | Reading |
 | --- | --- | --- | --- |
 | bias-dominated | > 0.5 (or CI entirely above 0.5) | > 1 | Bias exceeds the calibrated signal |
 | mixed | 1/3-0.5 | 0.5-1 | Bias and signal are comparable |
@@ -84,7 +84,7 @@ Reading the printout top to bottom:
   protective-looking associations.
 * Calibration subtracts that bias: RR moves from 0.83 to 1.02 and the
   calibrated p-value is 0.65.
-* **BF = 0.88 [0.75, 0.99]** (bootstrap-median point estimate with
+* **BAF = 0.88 [0.75, 0.99]** (bootstrap-median point estimate with
   logit-scale CI): bias accounts for roughly nine tenths of the calibrated
   signal. Auxiliary ratio: BER = 7.3 [3.0, 165.0].
   Classification: *bias-dominated*.
@@ -103,7 +103,7 @@ plot_bf_gauge(fit)
 ```
 
 The gauge is the one-look summary: the point and its bootstrap interval
-sit far inside the bias-dominated zone, near BF = 1. Read BF near 1 as
+sit far inside the bias-dominated zone, near BAF = 1. Read BAF near 1 as
 signal saturation by bias, not as a precise percentage.
 
 ```{r case1-null, fig.height = 5.5}
@@ -153,7 +153,7 @@ fitSccs <- ber_analyze(pc$logRr, pc$seLogRr, nc$logRr, nc$seLogRr,
 fitSccs
 ```
 
-BF = 0.93 [0.84, 1.00]: despite 45 controls and a highly significant
+BAF = 0.93 [0.84, 1.00]: despite 45 controls and a highly significant
 raw estimate, the residual bias is an order of magnitude larger than the
 calibrated signal (BER = 13.3 [5.4, 240.3]). The lower confidence bound
 alone exceeds 5 on the ratio scale, and 0.84 on the fraction scale — the
@@ -179,7 +179,7 @@ fitCm <- ber_analyze(pc2$logRr, pc2$seLogRr, nc2$logRr, nc2$seLogRr,
 fitCm
 ```
 
-BF = 0.03 [0.00, 0.15]: the calibrated effect (RR = 4.2) dwarfs the
+BAF = 0.03 [0.00, 0.15]: the calibrated effect (RR = 4.2) dwarfs the
 estimated bias. The entire bootstrap interval lies below 1/3, so the
 classification is *effect-dominated* — exactly what a known hepatotoxin
 should produce, and a useful positive control for the method itself.
@@ -211,7 +211,7 @@ diag$shapiro_p   # normality screen on standardized residuals
 ```
 
 Bootstrap intervals are computed as percentile intervals **on the log
-scale** for BER and exponentiated; the BF interval is the monotone
+scale** for BER and exponentiated; the BAF interval is the monotone
 transform of the same interval (equivalently, a percentile interval on the
 logit scale). Both are strictly positive, right-skewed ratio-type
 estimators; the log/logit transform yields an approximately symmetric
@@ -221,13 +221,13 @@ interval always come from the same distribution.
 
 ## Guardrails
 
-* **Garbage controls in, garbage BF out.** Negative controls must share
-  the bias mechanism of the primary estimate. BF formalizes the
+* **Garbage controls in, garbage BAF out.** Negative controls must share
+  the bias mechanism of the primary estimate. BAF formalizes the
   calibration; it cannot rescue a broken control set.
-* **BF is a diagnostic, not a decision rule.** "Bias-dominated" means
+* **BAF is a diagnostic, not a decision rule.** "Bias-dominated" means
   the data cannot separate effect from bias — not that no effect exists.
-* **BF near 1 is saturation, not precision.** When the calibrated effect
-  is near zero, the exact value of BF (and BER) is unstable; report the
+* **BAF near 1 is saturation, not precision.** When the calibrated effect
+  is near zero, the exact value of BAF (and BER) is unstable; report the
   interval and the Fieller set, and lean on the zone assignment.
 * **Mind K.** With fewer than about 10 negative controls the empirical
   null is fragile; always run `ber_loo()` and look at `plot_qq()`.

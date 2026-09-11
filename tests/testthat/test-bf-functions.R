@@ -1,4 +1,4 @@
-test_that("ber_estimate returns a BF in [0,1] consistent with BER", {
+test_that("ber_estimate returns a BAF in [0,1] consistent with BER", {
   est <- ber_estimate(sim_est$logRr, sim_est$seLogRr,
                       sim_nc$logRr, sim_nc$seLogRr, ncNames = sim_nc$outcome)
   expect_true(est$bf > 0 && est$bf <= 1)
@@ -7,7 +7,7 @@ test_that("ber_estimate returns a BF in [0,1] consistent with BER", {
   expect_equal(est$classification, "bias-dominated")
 })
 
-test_that("ber_estimate returns BF = 1 when the calibrated effect is exactly 0", {
+test_that("ber_estimate returns BAF = 1 when the calibrated effect is exactly 0", {
   # logRr exactly equal to the fitted mu_B forces log_rr_cal = 0
   ncLog <- c(-0.3, -0.2, -0.25, -0.18, -0.22)
   ncSe <- rep(0.05, 5)

@@ -9,8 +9,8 @@
 #'
 #' @details
 #' The package's **default** plot for a `biasratio` object is the bounded
-#' BF gauge ([plot_bf_gauge()]): the paper speaks in bias fractions, and the
-#' BF lives on the unit interval (0 to 1), so it never suffers the
+#' BAF gauge ([plot_bf_gauge()]): the paper speaks in bias attribution fractions, and the
+#' BAF lives on the unit interval (0 to 1), so it never suffers the
 #' window-adaptation squeezing that a long right-skewed BER axis can hit
 #' when a bootstrap CI is very wide. `plot_gauge()` (BER scale) is retained
 #' for readers who prefer the ratio language; both plots encode the same

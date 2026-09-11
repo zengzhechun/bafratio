@@ -1,9 +1,9 @@
-#' BF gauge: point estimate and CI on the bounded 0-1 scale
+#' BAF gauge: point estimate and CI on the bounded 0-1 scale
 #'
-#' The signature plot of the v0.2.0 API. Shows the bias fraction (BF) and its
+#' The signature plot of the v0.2.0 API. Shows the bias attribution fraction (BAF) and its
 #' bootstrap CI on the bounded unit interval, divided into the three
 #' credibility zones: effect-dominated (< 1/3), mixed (1/3-0.5), and
-#' bias-dominated (> 0.5). BF values near 1 should be read as signal
+#' bias-dominated (> 0.5). BAF values near 1 should be read as signal
 #' saturation by bias, not as precise fractions.
 #'
 #' @param x An object of class `biasratio` (uses its bootstrap CI and median
@@ -34,11 +34,11 @@ plot_bf_gauge <- function(x, digits = 2) {
   )
 
   subtitle <- if (hasCi) {
-    sprintf("BF = %s,  %d%% CI [%s, %s]  ->  %s",
+    sprintf("BAF = %s,  %d%% CI [%s, %s]  ->  %s",
             fmtNum(bf, digits), round(x$bootstrap$level * 100),
             fmtNum(bfLo, digits), fmtNum(bfHi, digits), cls)
   } else {
-    sprintf("BF = %s  ->  %s (point estimate; run ber_bootstrap for a CI)",
+    sprintf("BAF = %s  ->  %s (point estimate; run ber_bootstrap for a CI)",
             fmtNum(bf, digits), cls)
   }
 
@@ -56,7 +56,7 @@ plot_bf_gauge <- function(x, digits = 2) {
                       y = -0.32, yend = 0.32,
                       linetype = "dashed", color = "grey55") +
     ggplot2::annotate("text", x = bf, y = -0.5,
-                      label = paste0("BF = ", fmtNum(bf, digits)),
+                      label = paste0("BAF = ", fmtNum(bf, digits)),
                       color = clsCol, fontface = "bold", size = 4.2) +
     ggplot2::geom_point(ggplot2::aes(x = bf, y = 0),
                         color = clsCol, size = 5.5) +
@@ -69,8 +69,8 @@ plot_bf_gauge <- function(x, digits = 2) {
     ggplot2::labs(
       title = "Bias fraction gauge",
       subtitle = subtitle,
-      x = "BF = |mu_B| / (|mu_B| + |calibrated effect|)", y = NULL,
-      caption = "Zones: BF < 1/3 effect-dominated | 1/3-0.5 mixed | > 0.5 bias-dominated"
+      x = "BAF = |mu_B| / (|mu_B| + |calibrated effect|)", y = NULL,
+      caption = "Zones: BAF < 1/3 effect-dominated | 1/3-0.5 mixed | > 0.5 bias-dominated"
     ) +
     theme_biasratio() +
     ggplot2::theme(

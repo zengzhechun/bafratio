@@ -2,7 +2,7 @@
 % Please edit documentation in R/bf-classify.R
 \name{bf_classify}
 \alias{bf_classify}
-\title{Classify an effect estimate from its bias fraction (BF)}
+\title{Classify an effect estimate from its bias attribution fraction (BAF)}
 \usage{
 bf_classify(
   bf,
@@ -13,18 +13,18 @@ bf_classify(
 )
 }
 \arguments{
-\item{bf}{Numeric scalar. The bias fraction.}
+\item{bf}{Numeric scalar. The bias attribution fraction.}
 
-\item{ciLo}{Numeric scalar. Lower bootstrap confidence limit for BF; \code{NA}
+\item{ciLo}{Numeric scalar. Lower bootstrap confidence limit for BAF; \code{NA}
 (default) triggers point-estimate classification.}
 
-\item{ciHi}{Numeric scalar. Upper bootstrap confidence limit for BF; \code{NA}
+\item{ciHi}{Numeric scalar. Upper bootstrap confidence limit for BAF; \code{NA}
 (default) triggers point-estimate classification.}
 
-\item{biasThreshold}{BF above which an estimate is bias-dominated
+\item{biasThreshold}{BAF above which an estimate is bias-dominated
 (default 0.5: bias exceeds the residual effect).}
 
-\item{effectThreshold}{BF below which an estimate is effect-dominated
+\item{effectThreshold}{BAF below which an estimate is effect-dominated
 (default 1/3: residual effect is at least twice the bias).}
 }
 \value{
@@ -33,19 +33,28 @@ A character scalar: \code{"bias-dominated"}, \code{"mixed"},
 }
 \description{
 Three-zone classification of the credibility of an observational effect
-estimate on the bounded BF scale. This is the primary classification
+estimate on the bounded BAF scale. This is the primary classification
 rule of the package; it is equivalent to \code{\link[=ber_classify]{ber_classify()}} on the ratio
-scale (BF > 0.5 equals BER > 1; BF < 1/3 equals BER < 0.5). When a
+scale (BAF > 0.5 equals BER > 1; BAF < 1/3 equals BER < 0.5). When a
 bootstrap confidence interval is available, the classification uses the
 interval (conservative); otherwise it falls back to the point estimate.
 }
 \details{
 This function shares the single classification kernel with
-\code{\link[=ber_classify]{ber_classify()}}: it maps the BF and the thresholds/CI limits to the BER
-scale via \eqn{\mathrm{BER} = \mathrm{BF}/(1-\mathrm{BF})} and calls the
+\code{\link[=ber_classify]{ber_classify()}}: it maps the BAF and the thresholds/CI limits to the BER
+scale via \eqn{\mathrm{BER} = \mathrm{BAF}/(1-\mathrm{BAF})} and calls the
 kernel. The two functions are therefore guaranteed identical by
 construction; \code{bf_classify(b, t) == ber_classify(b/(1-b), t/(1-t))} for
 any in-domain inputs.
+
+The thresholds are the same (0.5 and 1/3) whether or not a confidence
+interval is supplied, so with an interval this function answers "is the
+whole interval inside one zone?". That is \strong{not} the question asked by the
+reporting rules \code{R2}/\code{R3}/\code{C1}/\code{C2} of the companion manuscript, which test
+whether the point estimate or the interval stays clear of the
+bias-dominated threshold alone; see \code{\link[=bf_rules]{bf_rules()}} for those. The two
+disagree on cases such as \code{BAF = 0.45} with interval \verb{[0.30, 0.48]}, which
+this function calls \code{"mixed"} while rule \code{R3} accepts.
 }
 \examples{
 bf_classify(0.91)                         # 点估计：偏倚主导

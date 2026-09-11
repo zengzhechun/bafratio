@@ -39,13 +39,13 @@ method).}
 
 \item{ncNames}{Optional character vector of negative-control labels.}
 
-\item{nBoot}{Bootstrap replicates for the BF 95\% CI (default method only;
+\item{nBoot}{Bootstrap replicates for the BAF 95\% CI (default method only;
 ignored when a \code{biasratio} object is supplied, since it already has the
 bootstrap).}
 
 \item{seed}{Optional random seed for the bootstrap (default method).}
 
-\item{level}{Confidence level for the BF CI (default 0.95).}
+\item{level}{Confidence level for the BAF CI (default 0.95).}
 
 \item{method}{Calibrated p method, \code{"plugin"} (default) or \code{"robust"}
 (passed to \code{\link[=ber_estimate]{ber_estimate()}} in the default method).}
@@ -84,10 +84,10 @@ evidence}, using a two-layer procedure:
 calibrated p at or above the threshold means no signal distinct from
 chance is established, so the bias screening in Layer 2 is not entered
 and the verdict is \code{"insufficient-evidence"}.
-\item \strong{Layer 2 (bias share).} Conditional on a real signal, the bias fraction
-\code{BF} and its 95\% CI are used to look up, in the reference simulation
+\item \strong{Layer 2 (bias share).} Conditional on a real signal, the bias attribution fraction
+\code{BAF} and its 95\% CI are used to look up, in the reference simulation
 calibration \link{bf_reliability}, the probability that the \emph{true} regime is
-bias-dominated. Because a wide CI implies a poorly pinned-down BF, both
+bias-dominated. Because a wide CI implies a poorly pinned-down BAF, both
 the narrow-CI and wide-CI conditional probabilities are read and the
 conservative maximum is reported as \code{P(bias-dominated)}. The verdict then
 follows fixed bands:
@@ -97,8 +97,19 @@ follows fixed bands:
 
 The function returns a \code{ber_screen} object whose \code{print}/\code{summary} show the
 numeric decision and whose \code{explain()} method returns a plain-English
-interpretation. When the BF 95\% CI is truncated at the 0 or 1 boundary, the
+interpretation. When the BAF 95\% CI is truncated at the 0 or 1 boundary, the
 usable one-sided half-interval is used for the width classification.
+
+\strong{Interval coverage caveat.} The \code{BAF} interval underlying both layers is
+an approximate (bootstrap / posterior) interval whose empirical coverage in
+the reference simulation is below the nominal 95\% (71.1\% overall, 58.5\%
+narrow, 83.8\% wide; companion manuscript, v39). The verdict bands therefore
+carry more uncertainty than a nominal 95\% interval implies. See the
+\link{bf_reliability} reference table this screening reads.
+
+The two-layer screen implements rules \code{R1} and \code{R4} of the companion
+manuscript's rule table. The remaining rules, including the interval-based
+\code{R3}/\code{C2}, are available from \code{\link[=bf_rules]{bf_rules()}}.
 }
 \examples{
 # raw inputs
@@ -114,6 +125,7 @@ ber_screen(fit)
 }
 \seealso{
 \code{\link[=ber_analyze]{ber_analyze()}} for the full workflow, \code{\link[=ber_classify]{ber_classify()}} /
-\code{\link[=bf_classify]{bf_classify()}} for the simpler three-zone (BF-only) classification, and
-\code{\link[=explain]{explain()}} for the plain-English interpretation.
+\code{\link[=bf_classify]{bf_classify()}} for the simpler three-zone (BAF-only) classification,
+\code{\link[=bf_rules]{bf_rules()}} for the full manuscript rule table, and \code{\link[=explain]{explain()}} for the
+plain-English interpretation.
 }

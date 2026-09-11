@@ -17,7 +17,7 @@ A \code{ggplot} object.
 \description{
 Draws the \code{\link[=ber_screen]{ber_screen()}} decision as a two-layer diagram: the top panel
 shows Layer 1 (whether the calibrated p-value clears the signal threshold),
-the bottom panel shows Layer 2 (the bias fraction BF and its 95\% CI on the
+the bottom panel shows Layer 2 (the bias attribution fraction BAF and its 95\% CI on the
 bounded 0-1 scale, colored by the verdict). The conservative
 P(bias-dominated) is reported in the subtitle, so the clinician reads the
 conclusion directly without interpreting narrow versus wide confidence

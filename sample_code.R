@@ -15,12 +15,12 @@ fit <- ber_analyze(
   loo      = TRUE
 )
 fit
-#> biasratio: full BF / BER analysis
+#> biasratio: full BAF / BER analysis
 #> ========================================================
 #> Empirical null:  mu_B = -0.208, sigma_B = 0.027  (K = 12 negative controls)
 #> Uncalibrated:    RR = 0.832 [0.762, 0.909],  p < 0.001
 #> Calibrated:      RR = 1.024,  calibrated p 0.649
-#> BF  = 0.879,  95% CI [0.751, 0.994]  (bootstrap median)
+#> BAF  = 0.879,  95% CI [0.751, 0.994]  (bootstrap median)
 #> BER = 7.27,  95% CI [3.01, 164.95]  (log bootstrap, n = 2000)
 #> Classification (CI-based):  bias-dominated
 #> Diagnostics: Shapiro-Wilk p = 0.637; max |std. resid| = 1.35 (Benign prostatic hyperplasia)

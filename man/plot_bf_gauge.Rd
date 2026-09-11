@@ -2,7 +2,7 @@
 % Please edit documentation in R/plot-bf-gauge.R
 \name{plot_bf_gauge}
 \alias{plot_bf_gauge}
-\title{BF gauge: point estimate and CI on the bounded 0-1 scale}
+\title{BAF gauge: point estimate and CI on the bounded 0-1 scale}
 \usage{
 plot_bf_gauge(x, digits = 2)
 }
@@ -16,10 +16,10 @@ point estimate) or \code{ber} (point estimate only).}
 A \code{ggplot} object.
 }
 \description{
-The signature plot of the v0.2.0 API. Shows the bias fraction (BF) and its
+The signature plot of the v0.2.0 API. Shows the bias attribution fraction (BAF) and its
 bootstrap CI on the bounded unit interval, divided into the three
 credibility zones: effect-dominated (< 1/3), mixed (1/3-0.5), and
-bias-dominated (> 0.5). BF values near 1 should be read as signal
+bias-dominated (> 0.5). BAF values near 1 should be read as signal
 saturation by bias, not as precise fractions.
 }
 \examples{

@@ -2,7 +2,7 @@
 # used by ber_screen() / bf_screen() (Layer 2 of the two-layer screening).
 #
 # The numbers below are the bias-dominated probability P(bias-dominated) by
-# bias-fraction (BF) bin, estimated from the 960-condition BF estimator
+# bias-fraction (BAF) bin, estimated from the 960-condition BAF estimator
 # simulation study (manuscript v38: a five-factor full factorial design —
 # true effect psi, bias center mu_B, bias heterogeneity sigma_PS, number of
 # negative controls K, and exchangeability violation — crossed to yield
@@ -11,7 +11,7 @@
 # bias-fraction manuscript and reused by the interactive explainer; identical
 # in spirit to output/tables/v38_part2_reliability_lookup.csv.
 #
-# Two columns are reported because the BF 95% CI width is itself informative:
+# Two columns are reported because the BAF 95% CI width is itself informative:
 #   * p_bias_dom_narrow  -- P(bias-dominated) conditional on a NARROW bootstrap CI
 #                          (half-width <= median half-width across the simulation)
 #   * p_bias_dom_wide    -- P(bias-dominated) conditional on a WIDE bootstrap CI
@@ -30,7 +30,7 @@ if (length(file_arg)) {
   pkg_root <- getwd()
 }
 
-# Twelve-bin BF estimator simulation calibration (manuscript v38, 960 x 1000).
+# Twelve-bin BAF estimator simulation calibration (manuscript v38, 960 x 1000).
 # bf_centre, p_bd_narrow, p_bd_wide taken from v38_part2_reliability_lookup.csv.
 bf_centers <- c(0.0927213667338725, 0.1833447469638830, 0.2654203256284330,
                 0.3336647840111200, 0.3906129064194290, 0.4403526433339310,
@@ -54,7 +54,7 @@ bf_reliability <- data.frame(
 )
 attr(bf_reliability, "med_ci_width") <- 0.1298899
 attr(bf_reliability, "source") <-
-  "960-condition BF estimator simulation (manuscript v38): five-factor full factorial (true effect psi, bias center mu_B, bias heterogeneity sigma_PS, number of negative controls K, exchangeability violation), 960 conditions x 1000 reps = 960,000 simulated target estimates; twelve-bucket lookup (Table 2), narrow/wide columns."
+  "960-condition BAF estimator simulation (manuscript v38): five-factor full factorial (true effect psi, bias center mu_B, bias heterogeneity sigma_PS, number of negative controls K, exchangeability violation), 960 conditions x 1000 reps = 960,000 simulated target estimates; twelve-bucket lookup (Table 2), narrow/wide columns."
 
 out_file <- file.path(pkg_root, "data", "bf_reliability.rda")
 save(bf_reliability, file = out_file, compress = "gzip")

@@ -1,16 +1,16 @@
 Package: biasratio
-Title: Bias Fraction and Bias-Effect Ratio: Quantifying Residual Systematic Bias in Observational Studies
-Version: 0.3.0
+Title: Bias Attribution Fraction and Bias-Effect Ratio: Quantifying Residual Systematic Bias in Observational Studies
+Version: 0.3.1
 Authors@R: c(
     person("Zhechun", "Zeng", , "zengzhechun@users.noreply.github.com", role = c("aut", "cre"))
   )
 Description: Quantifies residual systematic bias in observational effect
     estimates using negative control outcomes. Building on the OHDSI empirical
-    calibration framework ('EmpiricalCalibration'), the bias fraction (BF)
+    calibration framework ('EmpiricalCalibration'), the bias attribution fraction (BAF)
     expresses the share of the total calibrated signal (bias plus residual
     effect) attributable to systematic bias on a bounded 0-1 scale, and the
     bias-effect ratio (BER) expresses the same information as an unbounded
-    ratio (BF = BER / (1 + BER)). Each estimate is classified as
+    ratio (BAF = BER / (1 + BER)). Each estimate is classified as
     bias-dominated, mixed, or effect-dominated. Provides log-scale (and
     logit-scale) bootstrap confidence intervals with bootstrap-median point
     estimates, a Fieller confidence set for the underlying ratio,

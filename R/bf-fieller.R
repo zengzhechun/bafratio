@@ -1,7 +1,7 @@
 #' Fieller confidence set for the ratio of bias to calibrated effect
 #'
-#' The signed ratio \eqn{\rho = \mu_B / \tilde\psi} underlies the BF through
-#' \eqn{BF = |\rho| / (1 + |\rho|)}. Fieller's theorem gives the set of
+#' The signed ratio \eqn{\rho = \mu_B / \tilde\psi} underlies the BAF through
+#' \eqn{BAF = |\rho| / (1 + |\rho|)}. Fieller's theorem gives the set of
 #' \eqn{\rho} values consistent with the data at level \eqn{1-\alpha}, and
 #' it degrades honestly when the calibrated effect is near zero: the set can
 #' be an interior interval, the exterior of a finite interval, empty, or the

@@ -64,8 +64,8 @@ asBerObject <- function(x) {
 
 # 三区分类的单一内核，运行在 BER（比值）尺度上。
 # bf_classify 与 ber_classify 都通过它实现，保证跨尺度严格等价：
-# BF 经单调变换 bf -> bf/(1-bf) 映射到 BER，阈值与 CI 限同步变换。
-# biasThreshold / effectThreshold 默认 1 / 0.5，正是 BF 默认 0.5 / 1/3 的映射。
+# BAF 经单调变换 bf -> bf/(1-bf) 映射到 BER，阈值与 CI 限同步变换。
+# biasThreshold / effectThreshold 默认 1 / 0.5，正是 BAF 默认 0.5 / 1/3 的映射。
 .classify_ber <- function(ber, ciLo = NA_real_, ciHi = NA_real_,
                           biasThreshold = 1, effectThreshold = 0.5) {
   if (length(ber) != 1L || is.na(ber)) return("unclassifiable")
@@ -81,5 +81,5 @@ asBerObject <- function(x) {
   "mixed"
 }
 
-# BF -> BER 的单调映射；bf >= 1 视为偏倚主导（BER = Inf）。
+# BAF -> BER 的单调映射；bf >= 1 视为偏倚主导（BER = Inf）。
 .to_ber <- function(bf) ifelse(bf >= 1, Inf, bf / (1 - bf))

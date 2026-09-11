@@ -29,7 +29,7 @@
 #' @return An object of class `ber_boot`: a list with components
 #'   \describe{
 #'     \item{ci_lo, ci_hi}{Confidence limits for the BER.}
-#'     \item{bf_ci_lo, bf_ci_hi}{Confidence limits for the BF, obtained as
+#'     \item{bf_ci_lo, bf_ci_hi}{Confidence limits for the BAF, obtained as
 #'       the monotone transform of the log-scale BER interval (equivalently,
 #'       a percentile interval on the logit scale).}
 #'     \item{level, method}{As supplied.}
@@ -40,7 +40,7 @@
 #'       reported point estimates: they come from the same distribution as
 #'       the CI, so they cannot fall outside it.}
 #'     \item{boot_dist, boot_bf_dist}{Numeric vectors of length `nBoot`
-#'       with the bootstrap BER and BF replicates (`NA` for failed
+#'       with the bootstrap BER and BAF replicates (`NA` for failed
 #'       iterations).}
 #'     \item{n_fail, n_boot, success_rate}{Convergence diagnostics.}
 #'   }
